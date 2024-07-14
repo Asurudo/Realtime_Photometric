@@ -1,5 +1,6 @@
 ﻿#include<iostream>
 #include<cstdio>
+#include<cmath>
 #include <filesystem>
 
 #define GLAD_GL_IMPLEMENTATION
@@ -19,6 +20,9 @@
 #include "mesh.h"
 #include "colors.hpp"
 #include "ltc_matrix.hpp"
+#include "tiny_ldt.h"
+
+const float M_PI = 3.141592653;
 
 // 屏幕大小
 const unsigned int SCR_WIDTH = 1280;
@@ -57,7 +61,7 @@ struct VertexAL {
 	glm::vec2 texcoord;
 };
 
-const GLfloat psize = 10.0f;
+const GLfloat psize = 30.0f;
 VertexAL planeVertices[6] = {
 	{ {-psize, 0.0f, -psize}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f} },
 	{ {-psize, 0.0f,  psize}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f} },
@@ -74,6 +78,7 @@ VertexAL areaLightVertices[6] = {
 	{ {-8.0f, 0.4f,  1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
 	{ {-8.0f, 0.4f, -1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f} }
 };
+
 
 void configureMockupData()
 {
@@ -125,7 +130,6 @@ void configureMockupData()
 	glEnableVertexAttribArray(2);
 	glBindVertexArray(0);
 
-	glBindVertexArray(0);
 }
 void renderPlane()
 {
@@ -189,7 +193,7 @@ GLuint loadLUTTexture()
 void incrementRoughness(float step)
 {
 	static glm::vec3 color = Color::White;
-	static float roughness = 0.5f;
+	static float roughness = 1.0f;
 	roughness += step;
 	roughness = glm::clamp(roughness, 0.0f, 1.0f);
 	//std::cout << "roughness: " << roughness << '\n';
@@ -215,6 +219,21 @@ void switchTwoSided(bool doSwitch)
 	ltcShaderPtr->use();
 	ltcShaderPtr->setFloat("areaLight.twoSided", twoSided);
 	glUseProgram(0);
+}
+
+tiny_ldt<float>::light ldt;
+std::vector<std::vector<float>> intensityDis;
+
+float getIntesiy(float C, float gamma) {
+	int Cindex = floor(C / M_PI * 180.0 / ldt.dc);
+	int gammaindex = floor(gamma / M_PI * 180.0 / ldt.dg);
+	if (gamma == 0.0 || gamma == 180.0)
+		return intensityDis[Cindex][gammaindex];
+	float d = 0.0;
+	while (d + ldt.dg <= gamma / M_PI * 180.0)
+		d += ldt.dg;
+	float a = 1.0 - (gamma / M_PI * 180.0 - d) / ldt.dg;
+	return a * intensityDis[Cindex][gammaindex] + (1 - a) * intensityDis[Cindex][gammaindex + 1];
 }
 
 int main()
@@ -270,23 +289,31 @@ int main()
 	mLTC.mat2 = loadLUTTexture();
 
 	// SHADERS
-	Shader shaderPlane("../../../glsl/plane.vert", "../../../glsl/plane.frag");
+	Shader shaderPlane("../../../glsl/cubature.vert", "../../../glsl/cubature.frag");
+	// Shader shaderPlane("../../../glsl/plane.vert", "../../../glsl/plane.frag");
 	ltcShaderPtr = &shaderPlane;
 	Shader shaderLight("../../../glsl/area_light.vert", "../../../glsl/area_light.frag");
 
 	// SHADER CONFIGURATION
 	shaderPlane.use();
-	shaderPlane.setVec3("areaLight.points[0]", areaLightVertices[0].position);
+	shaderPlane.setVec3("Vertices[0]", areaLightVertices[0].position);
+	shaderPlane.setVec3("Vertices[1]", areaLightVertices[1].position);
+	shaderPlane.setVec3("Vertices[2]", areaLightVertices[4].position);
+	shaderPlane.setVec3("Vertices[3]", areaLightVertices[5].position);
+	shaderPlane.setVec3("PolygonNormal", areaLightVertices[0].normal);
+	shaderPlane.setInt("VertexCount", 4);
+	shaderPlane.setFloat("PolygonArea", 4.f);
+	/*shaderPlane.setVec3("areaLight.points[0]", areaLightVertices[0].position);
 	shaderPlane.setVec3("areaLight.points[1]", areaLightVertices[1].position);
 	shaderPlane.setVec3("areaLight.points[2]", areaLightVertices[4].position);
 	shaderPlane.setVec3("areaLight.points[3]", areaLightVertices[5].position);
 	shaderPlane.setVec3("areaLight.color", LIGHT_COLOR);
 	shaderPlane.setInt("LTC1", 0);
 	shaderPlane.setInt("LTC2", 1);
-	shaderPlane.setInt("material.diffuse", 2);
-	incrementRoughness(0.0f);
-	incrementLightIntensity(0.0f);
-	switchTwoSided(false);
+	shaderPlane.setInt("material.diffuse", 2);*/
+	/*incrementRoughness(0.0f);
+	incrementLightIntensity(0.0f);*/
+	//switchTwoSided(false);
 	glUseProgram(0);
 
 	shaderLight.use();
@@ -300,6 +327,47 @@ int main()
 	areaLightTranslate = glm::vec3(0.0f, 0.0f, 0.0f);
 	// 预处理 -------------------------------------------------------------------------------------------------end
 	
+	std::string err;
+	std::string warn;
+	if (!tiny_ldt<float>::load_ldt("../../../photometry/60510082_(STD).LDT", err, warn, ldt)) {
+		std::cout << "failed" << std::endl;
+	}
+	if (!err.empty())
+		std::cout << err << std::endl;
+	if (!warn.empty())
+		std::cout << warn << std::endl;
+
+	int cnt = 0;
+	std::cout << ldt.dc << std::endl;//15
+	std::cout << ldt.dg << std::endl;//5
+
+	for (float i = 0.0; i <= 360.0; i += ldt.dc) {
+		int j = i;
+		// 105/15=7 259/37-1=6
+		if ((i / ldt.dc) > ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1 &&
+			(int)((ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1) * ldt.dc))
+			// 105 %= (259/37-1)=6*15
+			j %= (int)((ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1) * ldt.dc);
+		else if ((i / ldt.dc) > ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1)
+			j = 0;
+		if (i == 270 && (int)((ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1) * ldt.dc >= 90))
+			j = 90;
+		// cout << "i" << i << " j" << j << endl;
+		// cout << (int)(j/ldt.dc)*((int)(180.0/ldt.dg)+1) << endl;
+		// cout << (int)(j/ldt.dc)*((int)(180.0/ldt.dg)+1)+(int)(180.0/ldt.dg)+1 << endl;
+		intensityDis.emplace_back(
+			std::vector<float>(ldt.luminous_intensity_distribution.begin() + (int)(j / ldt.dc) * ((int)(180.0 / ldt.dg) + 1)
+				, ldt.luminous_intensity_distribution.begin() + (int)(j / ldt.dc) * ((int)(180.0 / ldt.dg) + 1) + (int)(180.0 / ldt.dg) + 1)
+		);
+	}
+	for (auto v : intensityDis) {
+		for (auto p : v)
+			std::cout << p << " ";
+		std::cout << std::endl;
+	}
+	std::cout << intensityDis.size() << std::endl;
+
+
 	while (!glfwWindowShouldClose(window))
 	{
 		// 处理时间、输入以及清屏 --------------------------------------------------------------------------------------------------start
@@ -328,13 +396,14 @@ int main()
 		glm::mat4 projection = glm::perspective(
 		glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		shaderPlane.setMat4("projection", projection);
-		shaderPlane.setVec3("viewPosition", camera.Position);
-		shaderPlane.setVec3("areaLightTranslate", areaLightTranslate);
+		
+		shaderPlane.setVec3("CameraLocation", camera.Position);
+		// shaderPlane.setVec3("areaLightTranslate", areaLightTranslate);
 
-		glActiveTexture(GL_TEXTURE0);
+		/*glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, mLTC.mat1);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, mLTC.mat2);
+		glBindTexture(GL_TEXTURE_2D, mLTC.mat2);*/
 		renderPlane();
 		glUseProgram(0);
 
@@ -347,7 +416,7 @@ int main()
 		glUseProgram(0);
 
 		ImGui::Text("Avg fps: %.3f", ImGui::GetIO().Framerate);
-		ImGui::SliderFloat("Degree", &areaLightTranslate.z, 0.f, 100.f);
+		//ImGui::SliderFloat("Degree", &areaLightTranslate.z, 0.f, 100.f);
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
