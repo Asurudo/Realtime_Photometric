@@ -71,12 +71,12 @@ VertexAL planeVertices[6] = {
 	{ { psize, 0.0f, -psize}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f} }
 };
 VertexAL areaLightVertices[6] = {
-	{ {-8.0f, 2.4f, -1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }, // 0 1 5 4
-	{ {-8.0f, 2.4f,  1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f} },
-	{ {-8.0f, 0.4f,  1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
-	{ {-8.0f, 2.4f, -1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} },
-	{ {-8.0f, 0.4f,  1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
-	{ {-8.0f, 0.4f, -1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f} }
+	{ {0.0f, 6.4f, -1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }, // 0 1 5 4
+	{ {0.0f, 6.4f,  1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f} },
+	{ {0.0f, 4.4f,  1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
+	{ {0.0f, 6.4f, -1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} },
+	{ {0.0f, 4.4f,  1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
+	{ {0.0f, 4.4f, -1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f} }
 };
 
 
@@ -224,20 +224,50 @@ void switchTwoSided(bool doSwitch)
 tiny_ldt<float>::light ldt;
 std::vector<std::vector<float>> intensityDis;
 
-float getIntesiy(float C, float gamma) {
-	int Cindex = floor(C / M_PI * 180.0 / ldt.dc);
-	int gammaindex = floor(gamma / M_PI * 180.0 / ldt.dg);
-	if (gamma == 0.0 || gamma == 180.0)
-		return intensityDis[Cindex][gammaindex];
-	float d = 0.0;
-	while (d + ldt.dg <= gamma / M_PI * 180.0)
-		d += ldt.dg;
-	float a = 1.0 - (gamma / M_PI * 180.0 - d) / ldt.dg;
-	return a * intensityDis[Cindex][gammaindex] + (1 - a) * intensityDis[Cindex][gammaindex + 1];
-}
-
 int main()
 {	
+	// 读入光度学文件 -------------------------------------------------------------------------------------------------start
+	std::string err;
+	std::string warn;
+	if (!tiny_ldt<float>::load_ldt("../../../photometry/LINETIK-S_42184482.LDT", err, warn, ldt)) {
+		std::cout << "failed" << std::endl;
+	}
+	if (!err.empty())
+		std::cout << err << std::endl;
+	if (!warn.empty())
+		std::cout << warn << std::endl;
+
+	int cnt = 0;
+	std::cout << ldt.dc << std::endl;//15
+	std::cout << ldt.dg << std::endl;//5
+
+	for (float i = 0.0; i <= 360.0; i += ldt.dc) {
+		int j = i;
+		// 105/15=7 259/37-1=6
+		if ((i / ldt.dc) > ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1 &&
+			(int)((ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1) * ldt.dc))
+			// 105 %= (259/37-1)=6*15
+			j %= (int)((ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1) * ldt.dc);
+		else if ((i / ldt.dc) > ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1)
+			j = 0;
+		if (i == 270 && (int)((ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1) * ldt.dc >= 90))
+			j = 90;
+		// cout << "i" << i << " j" << j << endl;
+		// cout << (int)(j/ldt.dc)*((int)(180.0/ldt.dg)+1) << endl;
+		// cout << (int)(j/ldt.dc)*((int)(180.0/ldt.dg)+1)+(int)(180.0/ldt.dg)+1 << endl;
+		intensityDis.emplace_back(
+			std::vector<float>(ldt.luminous_intensity_distribution.begin() + (int)(j / ldt.dc) * ((int)(180.0 / ldt.dg) + 1)
+				, ldt.luminous_intensity_distribution.begin() + (int)(j / ldt.dc) * ((int)(180.0 / ldt.dg) + 1) + (int)(180.0 / ldt.dg) + 1)
+		);
+	}
+	for (auto v : intensityDis) {
+		for (auto p : v)
+			std::cout << p << " ";
+		std::cout << std::endl;
+	}
+	std::cout << intensityDis.size() << std::endl;
+	// 读入光度学文件 -------------------------------------------------------------------------------------------------end
+	
 	// OpenGL与窗口的初始化 -------------------------------------------------------------------------------------------------start
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -300,6 +330,16 @@ int main()
 	shaderPlane.setVec3("Vertices[1]", areaLightVertices[1].position);
 	shaderPlane.setVec3("Vertices[2]", areaLightVertices[4].position);
 	shaderPlane.setVec3("Vertices[3]", areaLightVertices[5].position);
+	std::cout << intensityDis.size() * intensityDis[0].size() << std::endl;
+	for(int i = 0; i < intensityDis.size(); i ++)
+		for (int j = 0; j < intensityDis[0].size(); j ++)
+		{
+			std::string name = "intensityDis[" + std::to_string(i * intensityDis[0].size() + j) + "]";
+			shaderPlane.setFloat(name, intensityDis[i][j]);
+		}
+	shaderPlane.setFloat("ldtdc", ldt.dc);
+	shaderPlane.setFloat("ldtdg", ldt.dg);
+
 	shaderPlane.setVec3("PolygonNormal", areaLightVertices[0].normal);
 	shaderPlane.setInt("VertexCount", 4);
 	shaderPlane.setFloat("PolygonArea", 4.f);
@@ -327,45 +367,6 @@ int main()
 	areaLightTranslate = glm::vec3(0.0f, 0.0f, 0.0f);
 	// 预处理 -------------------------------------------------------------------------------------------------end
 	
-	std::string err;
-	std::string warn;
-	if (!tiny_ldt<float>::load_ldt("../../../photometry/60510082_(STD).LDT", err, warn, ldt)) {
-		std::cout << "failed" << std::endl;
-	}
-	if (!err.empty())
-		std::cout << err << std::endl;
-	if (!warn.empty())
-		std::cout << warn << std::endl;
-
-	int cnt = 0;
-	std::cout << ldt.dc << std::endl;//15
-	std::cout << ldt.dg << std::endl;//5
-
-	for (float i = 0.0; i <= 360.0; i += ldt.dc) {
-		int j = i;
-		// 105/15=7 259/37-1=6
-		if ((i / ldt.dc) > ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1 &&
-			(int)((ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1) * ldt.dc))
-			// 105 %= (259/37-1)=6*15
-			j %= (int)((ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1) * ldt.dc);
-		else if ((i / ldt.dc) > ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1)
-			j = 0;
-		if (i == 270 && (int)((ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1) * ldt.dc >= 90))
-			j = 90;
-		// cout << "i" << i << " j" << j << endl;
-		// cout << (int)(j/ldt.dc)*((int)(180.0/ldt.dg)+1) << endl;
-		// cout << (int)(j/ldt.dc)*((int)(180.0/ldt.dg)+1)+(int)(180.0/ldt.dg)+1 << endl;
-		intensityDis.emplace_back(
-			std::vector<float>(ldt.luminous_intensity_distribution.begin() + (int)(j / ldt.dc) * ((int)(180.0 / ldt.dg) + 1)
-				, ldt.luminous_intensity_distribution.begin() + (int)(j / ldt.dc) * ((int)(180.0 / ldt.dg) + 1) + (int)(180.0 / ldt.dg) + 1)
-		);
-	}
-	for (auto v : intensityDis) {
-		for (auto p : v)
-			std::cout << p << " ";
-		std::cout << std::endl;
-	}
-	std::cout << intensityDis.size() << std::endl;
 
 
 	while (!glfwWindowShouldClose(window))

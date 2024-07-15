@@ -11,6 +11,9 @@ uniform vec3 PolygonNormal;
 uniform float PolygonArea;
 uniform int VertexCount;
 uniform vec3 Vertices[16];
+uniform float intensityDis[950];
+uniform float ldtdc;
+uniform float ldtdg;
 
 in vec3 wp;        // World position
 in vec3 n;         // Normal
@@ -23,21 +26,36 @@ const int MAX_VERTEXCOUNT_PLUS_ONE = MAX_VERTEXCOUNT + 1;
 vec3 normalize(vec3 v) {
     return v / length(v);
 }
-
 float dot(vec3 a, vec3 b) {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
-
 vec3 cross(vec3 a, vec3 b) {
     return vec3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
 }
-
 vec3 mix(vec3 a, vec3 b, float t) {
     return a * (1.0 - t) + b * t;
 }
 
 float getRadiance_World(vec3 dir){
-    return 500.0;
+    const float M_PI = 3.14159265359;
+    vec3 v = normalize(dir);
+    float C = atan(-v.y, -v.z) + M_PI, gamma = M_PI - acos(-v.x);
+    
+    int sz = int(180.0/ldtdg)+1;
+    int Cindex = int(C/M_PI*180.0/ldtdc);
+    int gammaindex = int(gamma/M_PI*180.0/ldtdg);
+    if(gamma==0.0 || gamma==M_PI)
+        return intensityDis[Cindex*sz+gammaindex];
+    float d = 0.0, e = 0.0;
+    while(d+ldtdg<=gamma/M_PI*180.0)
+        d += ldtdg;
+    while(e+ldtdc<=C/M_PI*180.0)
+        e += ldtdc;
+    float a = 1.0-(gamma/M_PI*180.0-d)/ldtdg;
+    float b = 1.0-(C/M_PI*180.0-e)/ldtdc;
+    float value1 = (a*intensityDis[Cindex*sz+gammaindex]+(1-a)*intensityDis[Cindex*sz+gammaindex+1]);
+    float value2 = (a*intensityDis[(Cindex+1)*sz+gammaindex]+(1-a)*intensityDis[(Cindex+1)*sz+gammaindex+1]);
+    return b*value1 + (1-b)*value2;
 }
 
 // Compute solid angle for a planar triangle as seen from the origin
@@ -87,7 +105,6 @@ ClosestPoint clampPointToPolygon(vec3 polygonVertices[MAX_VERTEXCOUNT_PLUS_ONE],
                 if (result.caseType == 1) break;
             }
         }
-
         v0 = v1;
     }
 
@@ -148,26 +165,26 @@ void main() {
         vec3 v0 = (closest.caseType != 2) ? closestPointDir : normalize(clippedVa[closest.index]);
 
         float v0out = abs(dot(PolygonNormal, v0));
-        float v0Le = getRadiance_World(v0) / v0out;
+        float v0Le = getRadiance_World(P-v0) / v0out;
 
         // Initialize 2nd vertex of first triangle v1
         int i1 = (closest.index + 1) % clippedVc;
         vec3 v1 = normalize(clippedVa[i1]);
         float v1out = abs(dot(PolygonNormal, v1));
-        float v1Le = getRadiance_World(v1) / v1out;
+        float v1Le = getRadiance_World(P-v1) / v1out;
 
         float denom = 0.0;
         float Ld = 0.0;
-        
+
         for (int i = 1; i <= tc; ++i) {
             int i2 = (closest.index + i + 1) % clippedVc;
             vec3 v2 = normalize(clippedVa[i2]);
             float v2out = abs(dot(PolygonNormal, v2));
-            float v2Le = getRadiance_World(v2) / v2out;
+            float v2Le = getRadiance_World(P-v2) / v2out;
 
             float sphEx = computeSolidAngle_Norm(v0, v1, v2);
             
-            Ld += sphEx * (v0Le * -v0.x + v1Le * -v1.x + v2Le * -v2.x) / 3.0;
+            Ld += sphEx * (v0Le  + v1Le  + v2Le ) / 3.0;
             denom += sphEx * (-v0.x + -v1.x + -v2.x);
             
             v1 = v2;
