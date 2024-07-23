@@ -1,5 +1,5 @@
 # ninja log v5
-4190	4367	7427269749101313	Realtime_Photometric.exe	ef22dada59bc17ba
+5131	5317	7428200861828059	Realtime_Photometric.exe	ef22dada59bc17ba
 4	228	7378057797198882	CMakeFiles/OpenGL_bennkyokai.dir/include/glad/glad.c.obj	bedb3ab7e19ae210
 20	636	7411698443873437	CMakeFiles/IMGUI.dir/include/imgui/imgui_tables.cpp.obj	4d0e522cc9fda786
 12	3532	7411708773168422	CMakeFiles/OpenGL_bennkyokai.dir/OpenGL_bennkyokai.cpp.obj	da1d6798a4a5041d
@@ -19,6 +19,26 @@
 29	368	7412458972128549	CMakeFiles/imgui.dir/include/imgui/imgui_widgets.cpp.obj	b815143dc8262702
 13	570	7412458974143850	CMakeFiles/imgui.dir/include/imgui/imgui.cpp.obj	11e2961639fb49fd
 37	1096	7412458979394465	CMakeFiles/Realtime_Photometric.dir/include/glm/detail/glm.cpp.obj	86146a1e92c58ed2
-12	3501	7427269740658913	CMakeFiles/Realtime_Photometric.dir/Realtime_Photometric.cpp.obj	d2c420f4d88ebe40
-12	3752	7428170511604534	CMakeFiles/Realtime_Photometric.dir/Realtime_Photometric.cpp.obj	d2c420f4d88ebe40
-4428	4610	7428170519857747	Realtime_Photometric.exe	ef22dada59bc17ba
+12	4410	7428200853071764	CMakeFiles/Realtime_Photometric.dir/Realtime_Photometric.cpp.obj	d2c420f4d88ebe40
+4	4234	7434171631634925	CMakeFiles/Realtime_Photometric.dir/Realtime_Photometric.cpp.obj	d2c420f4d88ebe40
+4945	5237	7434171641140691	Realtime_Photometric.exe	ef22dada59bc17ba
+3	4596	7434186753239757	CMakeFiles/Realtime_Photometric.dir/Realtime_Photometric.cpp.obj	d2c420f4d88ebe40
+5328	5503	7434186762041383	Realtime_Photometric.exe	ef22dada59bc17ba
+13	3878	7434187244051946	CMakeFiles/Realtime_Photometric.dir/Realtime_Photometric.cpp.obj	d2c420f4d88ebe40
+4597	4823	7434187253234297	Realtime_Photometric.exe	ef22dada59bc17ba
+3	3751	7434206223246125	CMakeFiles/Realtime_Photometric.dir/Realtime_Photometric.cpp.obj	d2c420f4d88ebe40
+4422	4587	7434206231439407	Realtime_Photometric.exe	ef22dada59bc17ba
+3	3491	7434207119834189	CMakeFiles/Realtime_Photometric.dir/Realtime_Photometric.cpp.obj	d2c420f4d88ebe40
+4235	4437	7434207129017333	Realtime_Photometric.exe	ef22dada59bc17ba
+12	4050	7434207500464381	CMakeFiles/Realtime_Photometric.dir/Realtime_Photometric.cpp.obj	d2c420f4d88ebe40
+4818	4992	7434207509661401	Realtime_Photometric.exe	ef22dada59bc17ba
+14	3752	7434207702198300	CMakeFiles/Realtime_Photometric.dir/Realtime_Photometric.cpp.obj	d2c420f4d88ebe40
+4508	4725	7434207711655766	Realtime_Photometric.exe	ef22dada59bc17ba
+3	3815	7434214535876132	CMakeFiles/Realtime_Photometric.dir/Realtime_Photometric.cpp.obj	d2c420f4d88ebe40
+4416	4586	7434214543415647	Realtime_Photometric.exe	ef22dada59bc17ba
+14	3728	7434214711739197	CMakeFiles/Realtime_Photometric.dir/Realtime_Photometric.cpp.obj	d2c420f4d88ebe40
+4611	4829	7434214722484064	Realtime_Photometric.exe	ef22dada59bc17ba
+2	3749	7434229550493162	CMakeFiles/Realtime_Photometric.dir/Realtime_Photometric.cpp.obj	d2c420f4d88ebe40
+4400	4569	7434229558477573	Realtime_Photometric.exe	ef22dada59bc17ba
+3	3895	7434237599177664	CMakeFiles/Realtime_Photometric.dir/Realtime_Photometric.cpp.obj	d2c420f4d88ebe40
+4651	4894	7434237608923085	Realtime_Photometric.exe	ef22dada59bc17ba

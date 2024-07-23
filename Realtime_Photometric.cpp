@@ -37,7 +37,7 @@ Shader* ltcShaderPtr;
 bool keys[1024]; // activated keys
 
 // 摄像机
-Camera camera(glm::vec3(0.0f, 1.0f, 0.5f), glm::vec3(0.0f, 1.0f, 0.0f), 180.0f, 0.0f);
+Camera camera(glm::vec3(0.0f, 10.0f, 0.5f), glm::vec3(0.0f, 1.0f, 0.0f), 180.0f, 0.0f);
 float lastX = (float)SCR_WIDTH / 2.0f;
 float lastY = (float)SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -71,12 +71,12 @@ VertexAL planeVertices[6] = {
 	{ { psize, 0.0f, -psize}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f} }
 };
 VertexAL areaLightVertices[6] = {
-	{ {0.0f, 6.4f, -1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }, // 0 1 5 4
-	{ {0.0f, 6.4f,  1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f} },
-	{ {0.0f, 4.4f,  1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
-	{ {0.0f, 6.4f, -1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} },
-	{ {0.0f, 4.4f,  1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
-	{ {0.0f, 4.4f, -1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f} }
+	{ {0.0f, 2.4f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }, // 0 1 5 4
+	{ {0.0f, 2.4f,  0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f} },
+	{ {0.0f, 1.4f,  0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
+	{ {0.0f, 2.4f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} },
+	{ {0.0f, 1.4f,  0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
+	{ {0.0f, 1.4f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f} }
 };
 
 

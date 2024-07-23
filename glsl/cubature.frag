@@ -47,15 +47,15 @@ float getRadiance_World(vec3 dir){
     if(gamma==0.0 || gamma==M_PI)
         return intensityDis[Cindex*sz+gammaindex];
     float d = 0.0, e = 0.0;
-    while(d+ldtdg<=gamma/M_PI*180.0)
+    while(d+ldtdg<gamma/M_PI*180.0)
         d += ldtdg;
-    while(e+ldtdc<=C/M_PI*180.0)
+    while(e+ldtdc<C/M_PI*180.0)
         e += ldtdc;
     float a = 1.0-(gamma/M_PI*180.0-d)/ldtdg;
     float b = 1.0-(C/M_PI*180.0-e)/ldtdc;
     float value1 = (a*intensityDis[Cindex*sz+gammaindex]+(1-a)*intensityDis[Cindex*sz+gammaindex+1]);
     float value2 = (a*intensityDis[(Cindex+1)*sz+gammaindex]+(1-a)*intensityDis[(Cindex+1)*sz+gammaindex+1]);
-    return b*value1 + (1-b)*value2;
+    return 0.1*(b*value1 + (1-b)*value2);
 }
 
 // Compute solid angle for a planar triangle as seen from the origin
