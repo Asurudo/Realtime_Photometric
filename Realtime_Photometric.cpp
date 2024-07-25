@@ -1,5 +1,6 @@
 ﻿#include<iostream>
 #include<cstdio>
+#include<algorithm>
 #include<cmath>
 #include <filesystem>
 
@@ -37,7 +38,7 @@ Shader* ltcShaderPtr;
 bool keys[1024]; // activated keys
 
 // 摄像机
-Camera camera(glm::vec3(0.0f, 10.0f, 0.5f), glm::vec3(0.0f, 1.0f, 0.0f), 180.0f, 0.0f);
+Camera camera(glm::vec3(0.0f, 20.0f, 0.5f), glm::vec3(0.0f, 1.0f, 0.0f), 180.0f, 0.0f);
 float lastX = (float)SCR_WIDTH / 2.0f;
 float lastY = (float)SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -71,12 +72,12 @@ VertexAL planeVertices[6] = {
 	{ { psize, 0.0f, -psize}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f} }
 };
 VertexAL areaLightVertices[6] = {
-	{ {0.0f, 2.4f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }, // 0 1 5 4
-	{ {0.0f, 2.4f,  0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f} },
-	{ {0.0f, 1.4f,  0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
-	{ {0.0f, 2.4f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} },
-	{ {0.0f, 1.4f,  0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
-	{ {0.0f, 1.4f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f} }
+	{ {0.0f, 1.3f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }, // 0 1 5 4
+	{ {0.0f, 1.3f,  0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f} },
+	{ {0.0f, 0.3f,  0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
+	{ {0.0f, 1.3f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} },
+	{ {0.0f, 0.3f,  0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
+	{ {0.0f, 0.3f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f} }
 };
 
 
@@ -229,7 +230,7 @@ int main()
 	// 读入光度学文件 -------------------------------------------------------------------------------------------------start
 	std::string err;
 	std::string warn;
-	if (!tiny_ldt<float>::load_ldt("../../../photometry/LINETIK-S_42184482.LDT", err, warn, ldt)) {
+	if (!tiny_ldt<float>::load_ldt("../../../photometry/SLOTLIGHT_42184612.LDT", err, warn, ldt)) {
 		std::cout << "failed" << std::endl;
 	}
 	if (!err.empty())
@@ -241,28 +242,35 @@ int main()
 	std::cout << ldt.dc << std::endl;//15
 	std::cout << ldt.dg << std::endl;//5
 
+	float maxIntensity = 0.0;
 	for (float i = 0.0; i <= 360.0; i += ldt.dc) {
-		int j = i;
-		// 105/15=7 259/37-1=6
-		if ((i / ldt.dc) > ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1 &&
-			(int)((ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1) * ldt.dc))
-			// 105 %= (259/37-1)=6*15
-			j %= (int)((ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1) * ldt.dc);
-		else if ((i / ldt.dc) > ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1)
-			j = 0;
-		if (i == 270 && (int)((ldt.luminous_intensity_distribution.size() / ((int)(180.0 / ldt.dg) + 1) - 1) * ldt.dc >= 90))
-			j = 90;
+		// int j = i;
+		// // 105/15=7 259/37-1=6
+		// if((i/ldt.dc)>ldt.luminous_intensity_distribution.size()/((int)(180.0/ldt.dg)+1)-1 &&
+		// (int)((ldt.luminous_intensity_distribution.size()/((int)(180.0/ldt.dg)+1)-1)*ldt.dc))
+		// // 105 %= (259/37-1)=6*15
+		//   j %= (int)((ldt.luminous_intensity_distribution.size()/((int)(180.0/ldt.dg)+1)-1)*ldt.dc);
+		// else if((i/ldt.dc)>ldt.luminous_intensity_distribution.size()/((int)(180.0/ldt.dg)+1)-1)
+		//   j = 0;
+		// if(i==270 && (int)((ldt.luminous_intensity_distribution.size()/((int)(180.0/ldt.dg)+1)-1)*ldt.dc>=90))
+		//   j = 90;
+		int sz = (180 / ldt.dg) + 1;
 		// cout << "i" << i << " j" << j << endl;
 		// cout << (int)(j/ldt.dc)*((int)(180.0/ldt.dg)+1) << endl;
 		// cout << (int)(j/ldt.dc)*((int)(180.0/ldt.dg)+1)+(int)(180.0/ldt.dg)+1 << endl;
+		int st = (int)(i / ldt.dc);
+		if (st * sz >= ldt.luminous_intensity_distribution.size())
+			st %= ldt.luminous_intensity_distribution.size() / sz;
 		intensityDis.emplace_back(
-			std::vector<float>(ldt.luminous_intensity_distribution.begin() + (int)(j / ldt.dc) * ((int)(180.0 / ldt.dg) + 1)
-				, ldt.luminous_intensity_distribution.begin() + (int)(j / ldt.dc) * ((int)(180.0 / ldt.dg) + 1) + (int)(180.0 / ldt.dg) + 1)
+			std::vector<float>(ldt.luminous_intensity_distribution.begin() + st * (sz)
+				, ldt.luminous_intensity_distribution.begin() + st * (sz)+sz)
 		);
 	}
 	for (auto v : intensityDis) {
-		for (auto p : v)
+		for (auto p : v) {
+			maxIntensity = std::max(maxIntensity, p);
 			std::cout << p << " ";
+		}
 		std::cout << std::endl;
 	}
 	std::cout << intensityDis.size() << std::endl;
@@ -274,7 +282,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "hoge", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "RT", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -342,7 +350,8 @@ int main()
 
 	shaderPlane.setVec3("PolygonNormal", areaLightVertices[0].normal);
 	shaderPlane.setInt("VertexCount", 4);
-	shaderPlane.setFloat("PolygonArea", 4.f);
+	shaderPlane.setFloat("PolygonArea", 1.f);
+	shaderPlane.setFloat("maxIntensity", maxIntensity);
 	/*shaderPlane.setVec3("areaLight.points[0]", areaLightVertices[0].position);
 	shaderPlane.setVec3("areaLight.points[1]", areaLightVertices[1].position);
 	shaderPlane.setVec3("areaLight.points[2]", areaLightVertices[4].position);
@@ -367,8 +376,6 @@ int main()
 	areaLightTranslate = glm::vec3(0.0f, 0.0f, 0.0f);
 	// 预处理 -------------------------------------------------------------------------------------------------end
 	
-
-
 	while (!glfwWindowShouldClose(window))
 	{
 		// 处理时间、输入以及清屏 --------------------------------------------------------------------------------------------------start
