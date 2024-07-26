@@ -40,7 +40,7 @@ vec3 mix(vec3 a, vec3 b, float t) {
 float getRadiance_World(vec3 dir){
     const float M_PI = 3.14159265359;
     vec3 v = normalize(dir);
-    float C = atan(-v.y, -v.z) + M_PI, gamma = M_PI - acos(-v.x);
+    float C = atan(-v.y, -v.z) + M_PI, gamma = M_PI - acos(v.x);
     
     int sz = int(180.0/ldtdg)+1;
     int Cindex = int(C/M_PI*180.0/ldtdc);
@@ -56,7 +56,7 @@ float getRadiance_World(vec3 dir){
     float b = 1.0-(C/M_PI*180.0-e)/ldtdc;
     float value1 = (a*intensityDis[Cindex*sz+gammaindex]+(1-a)*intensityDis[Cindex*sz+gammaindex+1]);
     float value2 = (a*intensityDis[(Cindex+1)*sz+gammaindex]+(1-a)*intensityDis[(Cindex+1)*sz+gammaindex+1]);
-    return (b*value1 + (1-b)*value2)/683;
+    return (b*value1 + (1-b)*value2)/438;
 }
 
 // Compute solid angle for a planar triangle as seen from the origin
@@ -138,7 +138,9 @@ void main() {
 
     const float eps = 1e-9;
     vec3 vb = Vertices[0] - wp;
-    float hb = -vb.x;
+    float hb = vb.x;
+    if(hb < 0)
+        hb = abs(hb);
     bool hbv = hb > eps;
     bool hbn = hb < -eps;
 
@@ -152,7 +154,9 @@ void main() {
 
     for (int vi = 1; vi < VertexCount; vi++) {
         vec3 v1 = Vertices[vi] - wp;
-        float h1 = -v1.x;
+        float h1 = v1.x;
+        if(h1 < 0)
+            h1 = abs(hb);
         bool h1v = h1 > eps;
         bool h1n = h1 < -eps;
 
@@ -219,7 +223,9 @@ void main() {
             //denom += sphEx * (-v0.x + -v1.x + -v2.x);
 
             float avgLe = (v0Le + v1Le + v2Le) / 3.0;
-            float avgG = -(v0.x + v1.x + v2.x) / 3.0;
+            float avgG = (v0.x + v1.x + v2.x) / 3.0;
+            if(avgG < 0)
+                avgG = abs(avgG);
             float G = sphEx * avgG;
             Ld += avgLe * G;
 
@@ -233,6 +239,6 @@ void main() {
             color += Ld / PolygonArea * brdf;
         }
     }
-    color.rgb = pow(color.rgb, vec3(1.0 / 4.4));
+    color.rgb = pow(color.rgb, vec3(1.0 / 2.4));
     fragColor = vec4(color, 1.0);
 }

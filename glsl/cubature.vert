@@ -19,6 +19,8 @@ void main() {
     // n = mat3(transpose(inverse(model))) * inNormal;
     
     c = vec4(5.0, 5.0, 5.0, 5.0);
+    // if(wp.x > 0)
+       // wp.x = -(wp.x);
 
-    gl_Position = projection * view * vec4(vec3(model * vec4(inPosition, 1.0)), 1.0);
+    gl_Position = projection * view * vec4(wp, 1.0);
 }
