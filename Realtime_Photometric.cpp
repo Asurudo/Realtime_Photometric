@@ -38,7 +38,7 @@ Shader* ltcShaderPtr;
 bool keys[1024]; // activated keys
 
 // 摄像机
-Camera camera(glm::vec3(0.0f, 20.0f, 0.5f), glm::vec3(0.0f, 1.0f, 0.0f), 180.0f, 0.0f);
+Camera camera(glm::vec3(0.0f, 60.0f, 0.5f), glm::vec3(0.0f, 1.0f, 0.0f), 180.0f, 0.0f);
 float lastX = (float)SCR_WIDTH / 2.0f;
 float lastY = (float)SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -72,12 +72,12 @@ VertexAL planeVertices[6] = {
 	{ { psize, 0.0f, -psize}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f} }
 };
 VertexAL areaLightVertices[6] = {
-	{ {0.0f, 1.3f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }, // 0 1 5 4
-	{ {0.0f, 1.3f,  0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f} },
-	{ {0.0f, 0.3f,  0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
-	{ {0.0f, 1.3f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} },
-	{ {0.0f, 0.3f,  0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
-	{ {0.0f, 0.3f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f} }
+	{ {0.0f, 3.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }, // 0 1 5 4
+	{ {0.0f, 3.4f,  1.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f} },
+	{ {0.0f, 0.4f,  1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
+	{ {0.0f, 3.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} },
+	{ {0.0f, 0.4f,  1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
+	{ {0.0f, 0.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f} }
 };
 
 
@@ -230,7 +230,7 @@ int main()
 	// 读入光度学文件 -------------------------------------------------------------------------------------------------start
 	std::string err;
 	std::string warn;
-	if (!tiny_ldt<float>::load_ldt("../../../photometry/SLOTLIGHT_42184612.LDT", err, warn, ldt)) {
+	if (!tiny_ldt<float>::load_ldt("../../../photometry/SCON-S.LDT", err, warn, ldt)) {
 		std::cout << "failed" << std::endl;
 	}
 	if (!err.empty())
@@ -350,7 +350,7 @@ int main()
 
 	shaderPlane.setVec3("PolygonNormal", areaLightVertices[0].normal);
 	shaderPlane.setInt("VertexCount", 4);
-	shaderPlane.setFloat("PolygonArea", 1.f);
+	shaderPlane.setFloat("PolygonArea", 9.f);
 	shaderPlane.setFloat("maxIntensity", maxIntensity);
 	/*shaderPlane.setVec3("areaLight.points[0]", areaLightVertices[0].position);
 	shaderPlane.setVec3("areaLight.points[1]", areaLightVertices[1].position);
