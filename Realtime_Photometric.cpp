@@ -1,5 +1,6 @@
 ﻿#include<iostream>
 #include<cstdio>
+#include<string>
 #include<algorithm>
 #include<cmath>
 #include <filesystem>
@@ -16,6 +17,7 @@
 #include "imgui/imgui_impl_opengl3.h"
 
 #include "shader.h"
+#include "App.h"
 #include "camera.h"
 #include "model.h"
 #include "mesh.h"
@@ -31,6 +33,9 @@ const unsigned int SCR_HEIGHT = 720;
 
 // 光源
 const glm::vec3 LIGHT_COLOR = Color::White; // CHANGE AREA LIGHT COLOR HERE!
+// 光源乘数
+float IntensityMulti = 1.0;
+std::string lightType = "SLOTLIGHT_42184612";
 glm::vec3 areaLightTranslate;
 Shader* ltcShaderPtr;
 
@@ -38,7 +43,7 @@ Shader* ltcShaderPtr;
 bool keys[1024]; // activated keys
 
 // 摄像机
-Camera camera(glm::vec3(0.0f, 60.0f, 0.5f), glm::vec3(0.0f, 1.0f, 0.0f), 180.0f, 0.0f);
+Camera camera(glm::vec3(-35.f, 20.0f, -15.f), glm::vec3(0.0f, 1.0f, 0.0f), 30.0f, -30.0f);
 float lastX = (float)SCR_WIDTH / 2.0f;
 float lastY = (float)SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -46,6 +51,10 @@ bool firstMouse = true;
 // 时间
 float deltaTime = 0.0f;	// 这一帧与上一帧之间的间隔时间
 float lastFrame = 0.0f;
+
+// 光度学文件
+tiny_ldt<float>::light ldt;
+std::vector<std::vector<float>> intensityDis;
 
 // 面光源与平面定义
 // 2---3-5
@@ -222,15 +231,13 @@ void switchTwoSided(bool doSwitch)
 	glUseProgram(0);
 }
 
-tiny_ldt<float>::light ldt;
-std::vector<std::vector<float>> intensityDis;
-
-int main()
-{	
-	// 读入光度学文件 -------------------------------------------------------------------------------------------------start
+void readLDT() {
+	for (auto& innerVec : intensityDis)
+		innerVec.clear();
+	intensityDis.clear();
 	std::string err;
 	std::string warn;
-	if (!tiny_ldt<float>::load_ldt("../../../photometry/SCON-S.LDT", err, warn, ldt)) {
+	if (!tiny_ldt<float>::load_ldt("../../../photometry/" + lightType + ".LDT", err, warn, ldt)) {
 		std::cout << "failed" << std::endl;
 	}
 	if (!err.empty())
@@ -242,7 +249,6 @@ int main()
 	std::cout << ldt.dc << std::endl;//15
 	std::cout << ldt.dg << std::endl;//5
 
-	float maxIntensity = 0.0;
 	for (float i = 0.0; i <= 360.0; i += ldt.dc) {
 		// int j = i;
 		// // 105/15=7 259/37-1=6
@@ -268,21 +274,23 @@ int main()
 	}
 	for (auto v : intensityDis) {
 		for (auto p : v) {
-			maxIntensity = std::max(maxIntensity, p);
 			std::cout << p << " ";
 		}
 		std::cout << std::endl;
 	}
 	std::cout << intensityDis.size() << std::endl;
-	// 读入光度学文件 -------------------------------------------------------------------------------------------------end
-	
+}
+
+int main()
+{	
+	readLDT();
 	// OpenGL与窗口的初始化 -------------------------------------------------------------------------------------------------start
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "RT", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Real-Time Area Light photometric light", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -300,8 +308,8 @@ int main()
 
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	glfwSetCursorPosCallback(window, mouse_callback);
-	glfwSetScrollCallback(window, scroll_callback);
+	// glfwSetCursorPosCallback(window, mouse_callback);
+	// glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, key_callback);
 
 	// 隐藏鼠标
@@ -351,7 +359,7 @@ int main()
 	shaderPlane.setVec3("PolygonNormal", areaLightVertices[0].normal);
 	shaderPlane.setInt("VertexCount", 4);
 	shaderPlane.setFloat("PolygonArea", 9.f);
-	shaderPlane.setFloat("maxIntensity", maxIntensity);
+	shaderPlane.setFloat("IntensityMulti", IntensityMulti);
 	/*shaderPlane.setVec3("areaLight.points[0]", areaLightVertices[0].position);
 	shaderPlane.setVec3("areaLight.points[1]", areaLightVertices[1].position);
 	shaderPlane.setVec3("areaLight.points[2]", areaLightVertices[4].position);
@@ -392,9 +400,31 @@ int main()
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+		App::IntensityMultiPtr = &IntensityMulti;
+		App::CameraPosition = &camera.Position;
+		App::CameraYaw = &camera.Yaw;
+		App::CameraPitch = &camera.Pitch;
+		App::RenderUI();
+		if (App::lightChanged)
+		{
+			lightType = App::lightType;
+			readLDT();
+			shaderPlane.use();
+			for (int i = 0; i < intensityDis.size(); i++)
+				for (int j = 0; j < intensityDis[0].size(); j++)
+				{
+					std::string name = "intensityDis[" + std::to_string(i * intensityDis[0].size() + j) + "]";
+					shaderPlane.setFloat(name, intensityDis[i][j]);
+				}
+			shaderPlane.setFloat("ldtdc", ldt.dc);
+			shaderPlane.setFloat("ldtdg", ldt.dg);
+			App::lightChanged = false; 
+		}
+			
 		// 处理时间、输入以及清屏 --------------------------------------------------------------------------------------------------end
 
 		shaderPlane.use();
+		shaderPlane.setFloat("IntensityMulti", IntensityMulti);
 		glm::mat4 model(1.0f);
 		glm::mat3 normalMatrix = glm::mat3(model);
 		shaderPlane.setMat4("model", model);
@@ -423,8 +453,6 @@ int main()
 		renderAreaLight();
 		glUseProgram(0);
 
-		ImGui::Text("Avg fps: %.3f", ImGui::GetIO().Framerate);
-		//ImGui::SliderFloat("Degree", &areaLightTranslate.z, 0.f, 100.f);
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

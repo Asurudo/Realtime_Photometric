@@ -14,7 +14,7 @@ uniform vec3 Vertices[8];
 uniform float intensityDis[950];
 uniform float ldtdc;
 uniform float ldtdg;
-uniform float maxIntensity;
+uniform float IntensityMulti;
 
 in vec3 wp;        // World position
 in vec3 n;         // Normal
@@ -239,6 +239,7 @@ void main() {
             color += Ld / PolygonArea * brdf;
         }
     }
+    color.rgb *= IntensityMulti;
     color.rgb = pow(color.rgb, vec3(1.0 / 2.4));
     fragColor = vec4(color, 1.0);
 }
