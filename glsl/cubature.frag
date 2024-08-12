@@ -11,10 +11,20 @@ uniform vec3 PolygonNormal;
 uniform float PolygonArea;
 uniform int VertexCount;
 uniform vec3 Vertices[8];
-uniform float intensityDis[950];
 uniform float ldtdc;
 uniform float ldtdg;
 uniform float IntensityMulti;
+uniform float maxLDTValue;
+
+uniform sampler2D LDTLUT; 
+uniform float LUT_SIZE_X;
+uniform float LUT_SIZE_Y;
+float LUT_PIXEL_X = 1.0/LUT_SIZE_X;
+float LUT_PIXEL_Y = 1.0/LUT_SIZE_Y;
+float LUT_SCALE_X = (LUT_SIZE_X - 1.0)/LUT_SIZE_X;
+float LUT_SCALE_Y = (LUT_SIZE_Y - 1.0)/LUT_SIZE_Y;
+float LUT_BIAS_X  = 0.5/LUT_SIZE_X;
+float LUT_BIAS_Y  = 0.5/LUT_SIZE_Y;
 
 in vec3 wp;        // World position
 in vec3 n;         // Normal
@@ -54,8 +64,17 @@ float getRadiance_World(vec3 dir){
         e += ldtdc;
     float a = 1.0-(gamma/M_PI*180.0-d)/ldtdg;
     float b = 1.0-(C/M_PI*180.0-e)/ldtdc;
-    float value1 = (a*intensityDis[Cindex*sz+gammaindex]+(1-a)*intensityDis[Cindex*sz+gammaindex+1]);
-    float value2 = (a*intensityDis[(Cindex+1)*sz+gammaindex]+(1-a)*intensityDis[(Cindex+1)*sz+gammaindex+1]);
+    float value1 = (a*
+    texture(LDTLUT, vec2(gammaindex*LUT_SCALE_Y*LUT_PIXEL_Y + LUT_BIAS_Y), Cindex*LUT_SCALE_X*LUT_PIXEL_X + LUT_BIAS_X).r*maxLDTValue
+    +(1-a)*
+    texture(LDTLUT, vec2((gammaindex+1)*LUT_SCALE_Y*LUT_PIXEL_Y + LUT_BIAS_Y), Cindex*LUT_SCALE_X*LUT_PIXEL_X + LUT_BIAS_X).r*maxLDTValue
+    );
+
+    float value2 = (a*
+    texture(LDTLUT, vec2(gammaindex*LUT_SCALE_Y*LUT_PIXEL_Y + LUT_BIAS_Y), (Cindex+1)*LUT_SCALE_X*LUT_PIXEL_X + LUT_BIAS_X).r*maxLDTValue
+    +(1-a)*
+    texture(LDTLUT, vec2((gammaindex+1)*LUT_SCALE_Y*LUT_PIXEL_Y + LUT_BIAS_Y), (Cindex+1)*LUT_SCALE_X*LUT_PIXEL_X + LUT_BIAS_X).r*maxLDTValue
+    );
     return 6*(b*value1 + (1-b)*value2)/683;
 }
 
@@ -115,7 +134,7 @@ ClosestPoint clampPointToPolygon(vec3 polygonVertices[MAX_VERTEXCOUNT_PLUS_ONE],
 
 // Main shading procedure
 void main() {
-    vec3 P = wp;
+   vec3 P = wp;
     vec3 n = normalize(n);
 
     // Create orthonormal basis around N
@@ -218,7 +237,7 @@ void main() {
             float v2Le = getRadiance_World(P-v2) / v2out;
 
             float sphEx = computeSolidAngle_Norm(v0, v1, v2);
-            
+
             //Ld += sphEx * (v0Le  + v1Le  + v2Le ) / 3.0;
             //denom += sphEx * (-v0.x + -v1.x + -v2.x);
 
@@ -233,7 +252,7 @@ void main() {
             v1out = v2out;
             v1Le = v2Le;
         }
-        
+
         if (Ld > 0.0) {
             vec3 brdf = c.xyz / 3.14159265359;
             color += Ld / PolygonArea * brdf;

@@ -35,7 +35,7 @@ const unsigned int SCR_HEIGHT = 720;
 const glm::vec3 LIGHT_COLOR = Color::White; // CHANGE AREA LIGHT COLOR HERE!
 // 光源乘数
 float IntensityMulti = 1.0;
-std::string lightType = "SLOTLIGHT_42184612";
+std::string lightType = "LINETIK-S_42184482";
 glm::vec3 areaLightTranslate;
 Shader* ltcShaderPtr;
 
@@ -54,6 +54,7 @@ float lastFrame = 0.0f;
 
 // 光度学文件
 tiny_ldt<float>::light ldt;
+float maxLDTValue = -1.0;
 std::vector<std::vector<float>> intensityDis;
 
 // 面光源与平面定义
@@ -161,9 +162,27 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void do_movement(GLfloat deltaTime);
 
 struct LTC_matrices {
-	GLuint mat1;
-	GLuint mat2;
+	// GLuint mat1;
+	// GLuint mat2;
+	GLuint mat;
 };
+
+GLuint loadLDTTexture() {
+	GLuint texture = 0;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, intensityDis[0].size(), intensityDis.size(),
+		0, GL_RGBA, GL_FLOAT, LDTLUT);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	return texture;
+}
 
 GLuint loadMTexture()
 {
@@ -274,6 +293,7 @@ void readLDT() {
 	}
 	for (auto v : intensityDis) {
 		for (auto p : v) {
+			maxLDTValue = std::max(p, maxLDTValue);
 			std::cout << p << " ";
 		}
 		std::cout << std::endl;
@@ -308,8 +328,8 @@ int main()
 
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	// glfwSetCursorPosCallback(window, mouse_callback);
-	// glfwSetScrollCallback(window, scroll_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, key_callback);
 
 	// 隐藏鼠标
@@ -329,10 +349,7 @@ int main()
 
 	// 预处理 -------------------------------------------------------------------------------------------------start
 	glEnable(GL_DEPTH_TEST);
-	// LUT textures
-	LTC_matrices mLTC;
-	mLTC.mat1 = loadMTexture();
-	mLTC.mat2 = loadLUTTexture();
+	
 
 	// SHADERS
 	Shader shaderPlane("../../../glsl/cubature.vert", "../../../glsl/cubature.frag");
@@ -347,12 +364,23 @@ int main()
 	shaderPlane.setVec3("Vertices[2]", areaLightVertices[4].position);
 	shaderPlane.setVec3("Vertices[3]", areaLightVertices[5].position);
 	std::cout << intensityDis.size() * intensityDis[0].size() << std::endl;
+	int iter = 0;
 	for(int i = 0; i < intensityDis.size(); i ++)
 		for (int j = 0; j < intensityDis[0].size(); j ++)
 		{
-			std::string name = "intensityDis[" + std::to_string(i * intensityDis[0].size() + j) + "]";
-			shaderPlane.setFloat(name, intensityDis[i][j]);
+			// std::string name = "intensityDis[" + std::to_string(i * intensityDis[0].size() + j) + "]";
+			// shaderPlane.setFloat(name, intensityDis[i][j]);
+			LDTLUT[iter++] = intensityDis[i][j] / maxLDTValue;
+			LDTLUT[iter++] = intensityDis[i][j] / maxLDTValue;
+			LDTLUT[iter++] = intensityDis[i][j] / maxLDTValue;
+			LDTLUT[iter++] = intensityDis[i][j] / maxLDTValue;
 		}
+	
+	// LUT textures
+	LTC_matrices mLTC;
+	// mLTC.mat1 = loadMTexture();
+	// mLTC.mat2 = loadLUTTexture();
+	mLTC.mat = loadLDTTexture();
 	shaderPlane.setFloat("ldtdc", ldt.dc);
 	shaderPlane.setFloat("ldtdg", ldt.dg);
 
@@ -360,6 +388,10 @@ int main()
 	shaderPlane.setInt("VertexCount", 4);
 	shaderPlane.setFloat("PolygonArea", 9.f);
 	shaderPlane.setFloat("IntensityMulti", IntensityMulti);
+	shaderPlane.setFloat("maxLDTValue", maxLDTValue);
+	shaderPlane.setInt("LDTLUT", 0);
+	shaderPlane.setFloat("LUT_SIZE_X", intensityDis.size());
+	shaderPlane.setFloat("LUT_SIZE_Y", intensityDis[0].size());
 	/*shaderPlane.setVec3("areaLight.points[0]", areaLightVertices[0].position);
 	shaderPlane.setVec3("areaLight.points[1]", areaLightVertices[1].position);
 	shaderPlane.setVec3("areaLight.points[2]", areaLightVertices[4].position);
@@ -408,16 +440,27 @@ int main()
 		if (App::lightChanged)
 		{
 			lightType = App::lightType;
+			iter = maxLDTValue = 0;
 			readLDT();
 			shaderPlane.use();
 			for (int i = 0; i < intensityDis.size(); i++)
 				for (int j = 0; j < intensityDis[0].size(); j++)
+					maxLDTValue = std::max(maxLDTValue, intensityDis[i][j]);
+			for (int i = 0; i < intensityDis.size(); i++)
+				for (int j = 0; j < intensityDis[0].size(); j++)
 				{
-					std::string name = "intensityDis[" + std::to_string(i * intensityDis[0].size() + j) + "]";
-					shaderPlane.setFloat(name, intensityDis[i][j]);
+					LDTLUT[iter++] = intensityDis[i][j] / maxLDTValue;
+					LDTLUT[iter++] = intensityDis[i][j] / maxLDTValue;
+					LDTLUT[iter++] = intensityDis[i][j] / maxLDTValue;
+					LDTLUT[iter++] = intensityDis[i][j] / maxLDTValue;
 				}
+			mLTC.mat = loadLDTTexture();
 			shaderPlane.setFloat("ldtdc", ldt.dc);
 			shaderPlane.setFloat("ldtdg", ldt.dg);
+			shaderPlane.setFloat("maxLDTValue", maxLDTValue);
+			shaderPlane.setInt("LDTLUT", 0);
+			shaderPlane.setFloat("LUT_SIZE_X", intensityDis.size());
+			shaderPlane.setFloat("LUT_SIZE_Y", intensityDis[0].size());
 			App::lightChanged = false; 
 		}
 			
@@ -442,6 +485,8 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, mLTC.mat1);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, mLTC.mat2);*/
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, mLTC.mat);  
 		renderPlane();
 		glUseProgram(0);
 

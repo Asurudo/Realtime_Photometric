@@ -3,6 +3,10 @@
 // LTC1 is the inverse M
 // LTC2 is for (GGX norm, fresnel, 0(unused), sphere for horizon-clipping)
 
+float LDTLUT[20000] = {
+	
+};
+
 const float LTC1[] = {
 	1, 0, 0, 2e-05,
 	1, 0, 0, 0.000503905,
