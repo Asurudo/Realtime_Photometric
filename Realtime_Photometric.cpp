@@ -35,7 +35,7 @@ const unsigned int SCR_HEIGHT = 720;
 const glm::vec3 LIGHT_COLOR = Color::White; // CHANGE AREA LIGHT COLOR HERE!
 // 光源乘数
 float IntensityMulti = 1.0;
-std::string lightType = "LINETIK-S_42184482";
+std::string lightType = "INTRO_60714483";
 glm::vec3 areaLightTranslate;
 Shader* ltcShaderPtr;
 

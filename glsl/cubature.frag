@@ -65,15 +65,15 @@ float getRadiance_World(vec3 dir){
     float a = 1.0-(gamma/M_PI*180.0-d)/ldtdg;
     float b = 1.0-(C/M_PI*180.0-e)/ldtdc;
     float value1 = (a*
-    texture(LDTLUT, vec2(gammaindex*LUT_SCALE_Y*LUT_PIXEL_Y + LUT_BIAS_Y), Cindex*LUT_SCALE_X*LUT_PIXEL_X + LUT_BIAS_X).r*maxLDTValue
+    texelFetch(LDTLUT, ivec2(gammaindex, Cindex), 0).r*maxLDTValue
     +(1-a)*
-    texture(LDTLUT, vec2((gammaindex+1)*LUT_SCALE_Y*LUT_PIXEL_Y + LUT_BIAS_Y), Cindex*LUT_SCALE_X*LUT_PIXEL_X + LUT_BIAS_X).r*maxLDTValue
+    texelFetch(LDTLUT, ivec2(gammaindex+1, Cindex), 0).r*maxLDTValue
     );
 
     float value2 = (a*
-    texture(LDTLUT, vec2(gammaindex*LUT_SCALE_Y*LUT_PIXEL_Y + LUT_BIAS_Y), (Cindex+1)*LUT_SCALE_X*LUT_PIXEL_X + LUT_BIAS_X).r*maxLDTValue
+    texelFetch(LDTLUT, ivec2(gammaindex, Cindex+1), 0).r*maxLDTValue
     +(1-a)*
-    texture(LDTLUT, vec2((gammaindex+1)*LUT_SCALE_Y*LUT_PIXEL_Y + LUT_BIAS_Y), (Cindex+1)*LUT_SCALE_X*LUT_PIXEL_X + LUT_BIAS_X).r*maxLDTValue
+    texelFetch(LDTLUT, ivec2(gammaindex+1, Cindex+1), 0).r*maxLDTValue
     );
     return 6*(b*value1 + (1-b)*value2)/683;
 }
