@@ -28,14 +28,14 @@
 const float M_PI = 3.141592653;
 
 // 屏幕大小
-const unsigned int SCR_WIDTH = 1280;
-const unsigned int SCR_HEIGHT = 720;
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 600;
 
 // 光源
-const glm::vec3 LIGHT_COLOR = Color::White; // CHANGE AREA LIGHT COLOR HERE!
+const glm::vec3 LIGHT_COLOR = Color::White;
 // 光源乘数
 float IntensityMulti = 1.0;
-std::string lightType = "INTRO_60714483";
+std::string lightType = "MIREL_42925637";
 glm::vec3 areaLightTranslate;
 Shader* ltcShaderPtr;
 
@@ -43,7 +43,7 @@ Shader* ltcShaderPtr;
 bool keys[1024]; // activated keys
 
 // 摄像机
-Camera camera(glm::vec3(-35.f, 20.0f, -15.f), glm::vec3(0.0f, 1.0f, 0.0f), 30.0f, -30.0f);
+Camera camera(glm::vec3(0, 60.0f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, -90.0f);
 float lastX = (float)SCR_WIDTH / 2.0f;
 float lastY = (float)SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -327,8 +327,9 @@ int main()
 	printf("Load OpenGL %d.%d\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 
 	glfwMakeContextCurrent(window);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	glfwSetCursorPosCallback(window, mouse_callback);
+    // glEnable(GL_FRAMEBUFFER_SRGB);
+	// glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	// glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, key_callback);
 
@@ -475,7 +476,7 @@ int main()
 		glm::mat4 view = camera.GetViewMatrix();
 		shaderPlane.setMat4("view", view);
 		glm::mat4 projection = glm::perspective(
-		glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+		glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 300.0f);
 		shaderPlane.setMat4("projection", projection);
 		
 		shaderPlane.setVec3("CameraLocation", camera.Position);

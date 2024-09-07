@@ -75,7 +75,7 @@ float getRadiance_World(vec3 dir){
     +(1-a)*
     texelFetch(LDTLUT, ivec2(gammaindex+1, Cindex+1), 0).r*maxLDTValue
     );
-    return 6*(b*value1 + (1-b)*value2)/683;
+    return 30 * (b*value1 + (1-b)*value2)/683;
 }
 
 // Compute solid angle for a planar triangle as seen from the origin
@@ -134,7 +134,13 @@ ClosestPoint clampPointToPolygon(vec3 polygonVertices[MAX_VERTEXCOUNT_PLUS_ONE],
 
 // Main shading procedure
 void main() {
-   vec3 P = wp;
+    vec3 P = wp;
+    if(P.x <= 0.0001 && P.x >=-0.0001)
+    {
+        fragColor = vec4(0, 0, 0, 1.0);
+        return ;
+    }
+        
     vec3 n = normalize(n);
 
     // Create orthonormal basis around N
@@ -243,8 +249,8 @@ void main() {
 
             float avgLe = (v0Le + v1Le + v2Le) / 3.0;
             float avgG = (v0.x + v1.x + v2.x) / 3.0;
-            if(avgG < 0)
-                avgG = abs(avgG);
+            //if(avgG < 0)
+            //    avgG = abs(avgG);
             float G = sphEx * avgG;
             Ld += avgLe * G;
 
@@ -259,6 +265,6 @@ void main() {
         }
     }
     color.rgb *= IntensityMulti;
-    color.rgb = pow(color.rgb, vec3(1.0 / 2.4));
+    color.rgb = pow(color.rgb, vec3(1.0 / 3.3));
     fragColor = vec4(color, 1.0);
 }

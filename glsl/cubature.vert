@@ -18,7 +18,7 @@ void main() {
     n = inNormal;
     // n = mat3(transpose(inverse(model))) * inNormal;
     
-    c = vec4(5.0, 5.0, 5.0, 5.0);
+    c = vec4(1.0, 1.0, 1.0, 1.0);
     // if(wp.x > 0)
        // wp.x = -(wp.x);
 
