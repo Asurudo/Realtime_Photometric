@@ -24,8 +24,12 @@
 #include "colors.hpp"
 #include "ltc_matrix.hpp"
 #include "tiny_ldt.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 
 const float M_PI = 3.141592653;
+
+bool screenShotFlag = true;
 
 // 屏幕大小
 const unsigned int SCR_WIDTH = 800;
@@ -72,7 +76,7 @@ struct VertexAL {
 	glm::vec2 texcoord;
 };
 
-const GLfloat psize = 30.0f;
+const GLfloat psize = 100.0f;
 VertexAL planeVertices[6] = {
 	{ {-psize, 0.0f, -psize}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f} },
 	{ {-psize, 0.0f,  psize}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f} },
@@ -160,6 +164,24 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void do_movement(GLfloat deltaTime);
+int SaveScreenshot(const char* filename) {
+
+  char* data = (char*)malloc(
+      (size_t)(SCR_WIDTH * SCR_HEIGHT * 4));  // 3 components (R, G, B)
+
+  if (!data) return 0;
+
+  glPixelStorei(GL_PACK_ALIGNMENT, 1);
+  glReadPixels(0, 0, SCR_WIDTH, SCR_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, data);
+  stbi_flip_vertically_on_write(1);
+
+  int saved = stbi_write_png(filename, SCR_WIDTH, SCR_HEIGHT, 4, data, 0);
+
+  free(data);
+
+  return saved;
+}
+
 
 struct LTC_matrices {
 	// GLuint mat1;
@@ -328,7 +350,7 @@ int main()
 
 	glfwMakeContextCurrent(window);
     // glEnable(GL_FRAMEBUFFER_SRGB);
-	// glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	// glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, key_callback);
@@ -502,6 +524,11 @@ int main()
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+		if(screenShotFlag){
+            screenShotFlag = false;
+            SaveScreenshot("output.png");
+		}
+
 		glfwSwapBuffers(window);
 	}
 	glfwTerminate();
@@ -621,3 +648,4 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
+
