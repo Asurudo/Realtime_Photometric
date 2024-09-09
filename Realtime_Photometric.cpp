@@ -39,7 +39,7 @@ const unsigned int SCR_HEIGHT = 600;
 const glm::vec3 LIGHT_COLOR = Color::White;
 // 光源乘数
 float IntensityMulti = 1.0;
-std::string lightType = "MIREL_42925637";
+std::string lightType = "LINETIK-S_42184482";
 glm::vec3 areaLightTranslate;
 Shader* ltcShaderPtr;
 

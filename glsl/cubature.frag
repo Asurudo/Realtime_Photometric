@@ -249,8 +249,8 @@ void main() {
 
             float avgLe = (v0Le + v1Le + v2Le) / 3.0;
             float avgG = (v0.x + v1.x + v2.x) / 3.0;
-            //if(avgG < 0)
-            //    avgG = abs(avgG);
+            if(avgG < 0)
+                avgG = abs(avgG);
             float G = sphEx * avgG;
             Ld += avgLe * G;
 
@@ -265,6 +265,6 @@ void main() {
         }
     }
     color.rgb *= IntensityMulti;
-    color.rgb = pow(color.rgb, vec3(1.0 / 3.3));
+    color.rgb = pow(color.rgb, vec3(1.0 / 2.2));
     fragColor = vec4(color, 1.0);
 }
