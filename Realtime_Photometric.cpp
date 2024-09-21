@@ -76,7 +76,7 @@ struct VertexAL {
 	glm::vec2 texcoord;
 };
 
-const GLfloat psize = 100.0f;
+const GLfloat psize = 40.0f;
 VertexAL planeVertices[6] = {
 	{ {-psize, 0.0f, -psize}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f} },
 	{ {-psize, 0.0f,  psize}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f} },
@@ -184,8 +184,9 @@ int SaveScreenshot(const char* filename) {
 
 
 struct LTC_matrices {
-	// GLuint mat1;
-	// GLuint mat2;
+
+	GLuint mat1;
+	GLuint mat2;
 	GLuint mat;
 };
 
@@ -244,7 +245,7 @@ GLuint loadLUTTexture()
 void incrementRoughness(float step)
 {
 	static glm::vec3 color = Color::White;
-	static float roughness = 1.0f;
+	static float roughness = 0.2f;
 	roughness += step;
 	roughness = glm::clamp(roughness, 0.0f, 1.0f);
 	//std::cout << "roughness: " << roughness << '\n';
@@ -349,9 +350,9 @@ int main()
 	printf("Load OpenGL %d.%d\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 
 	glfwMakeContextCurrent(window);
-    // glEnable(GL_FRAMEBUFFER_SRGB);
+    glEnable(GL_FRAMEBUFFER_SRGB);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	// glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, key_callback);
 
@@ -376,6 +377,7 @@ int main()
 
 	// SHADERS
 	Shader shaderPlane("../../../glsl/cubature.vert", "../../../glsl/cubature.frag");
+	
 	// Shader shaderPlane("../../../glsl/plane.vert", "../../../glsl/plane.frag");
 	ltcShaderPtr = &shaderPlane;
 	Shader shaderLight("../../../glsl/area_light.vert", "../../../glsl/area_light.frag");
@@ -401,9 +403,11 @@ int main()
 	
 	// LUT textures
 	LTC_matrices mLTC;
-	// mLTC.mat1 = loadMTexture();
-	// mLTC.mat2 = loadLUTTexture();
-	mLTC.mat = loadLDTTexture();
+	
+    mLTC.mat = loadLDTTexture();
+	mLTC.mat1 = loadMTexture();
+    mLTC.mat2 = loadLUTTexture();
+	
 	shaderPlane.setFloat("ldtdc", ldt.dc);
 	shaderPlane.setFloat("ldtdg", ldt.dg);
 
@@ -415,17 +419,20 @@ int main()
 	shaderPlane.setInt("LDTLUT", 0);
 	shaderPlane.setFloat("LUT_SIZE_X", intensityDis.size());
 	shaderPlane.setFloat("LUT_SIZE_Y", intensityDis[0].size());
-	/*shaderPlane.setVec3("areaLight.points[0]", areaLightVertices[0].position);
+
+	shaderPlane.setVec3("areaLight.points[0]", areaLightVertices[0].position);
 	shaderPlane.setVec3("areaLight.points[1]", areaLightVertices[1].position);
 	shaderPlane.setVec3("areaLight.points[2]", areaLightVertices[4].position);
 	shaderPlane.setVec3("areaLight.points[3]", areaLightVertices[5].position);
 	shaderPlane.setVec3("areaLight.color", LIGHT_COLOR);
-	shaderPlane.setInt("LTC1", 0);
-	shaderPlane.setInt("LTC2", 1);
-	shaderPlane.setInt("material.diffuse", 2);*/
-	/*incrementRoughness(0.0f);
-	incrementLightIntensity(0.0f);*/
-	//switchTwoSided(false);
+	shaderPlane.setInt("LTC1", 1);
+	shaderPlane.setInt("LTC2", 2);
+	// shaderPlane.setInt("material.diffuse", 2);
+	
+	incrementRoughness(0.0f);
+	// incrementLightIntensity(0.0f);
+	switchTwoSided(false);
+
 	glUseProgram(0);
 
 	shaderLight.use();
@@ -478,10 +485,14 @@ int main()
 					LDTLUT[iter++] = intensityDis[i][j] / maxLDTValue;
 				}
 			mLTC.mat = loadLDTTexture();
+            mLTC.mat1 = loadMTexture();
+            mLTC.mat2 = loadLUTTexture();
 			shaderPlane.setFloat("ldtdc", ldt.dc);
 			shaderPlane.setFloat("ldtdg", ldt.dg);
 			shaderPlane.setFloat("maxLDTValue", maxLDTValue);
 			shaderPlane.setInt("LDTLUT", 0);
+            shaderPlane.setInt("LTC1", 1);
+            shaderPlane.setInt("LTC2", 2);
 			shaderPlane.setFloat("LUT_SIZE_X", intensityDis.size());
 			shaderPlane.setFloat("LUT_SIZE_Y", intensityDis[0].size());
 			App::lightChanged = false; 
@@ -501,15 +512,17 @@ int main()
 		glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 300.0f);
 		shaderPlane.setMat4("projection", projection);
 		
-		shaderPlane.setVec3("CameraLocation", camera.Position);
-		// shaderPlane.setVec3("areaLightTranslate", areaLightTranslate);
+		shaderPlane.setVec3("viewPosition", camera.Position);
+		// ADD
+		shaderPlane.setVec3("areaLightTranslate", areaLightTranslate);
 
-		/*glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, mLTC.mat1);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, mLTC.mat2);*/
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, mLTC.mat);  
+        glBindTexture(GL_TEXTURE_2D, mLTC.mat);  
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, mLTC.mat1);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, mLTC.mat2);
+
 		renderPlane();
 		glUseProgram(0);
 
