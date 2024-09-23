@@ -6,7 +6,7 @@ struct Vertex {
     vec4 c;     // Color
 };
 
-uniform vec3 CameraLocation;
+// uniform vec3 CameraLocation;
 uniform vec3 PolygonNormal;
 uniform float PolygonArea;
 uniform int VertexCount;
@@ -152,18 +152,39 @@ const float gamma = 2.2;
 vec3 ToLinear(vec3 v) { return PowVec3(v, gamma); }
 vec3 ToSRGB(vec3 v)   { return PowVec3(v, 1.0/gamma); }
 
+
+
+//float g(vec3 lwi, vec3 lwo)
+//{
+//	float tan_i = 1.0 / ( lwi.y * lwi.y ) - 1.0; 
+//	float tan_o = 1.0 / ( lwo.y * lwo.y ) - 1.0; 
+//	float lambda_i = ( - 1.0 + sqrt( 1.0 + material.albedoRoughness.w * material.albedoRoughness.w * tan_i ) ) / 2.0; 
+//	float lambda_o = ( - 1.0 + sqrt( 1.0 + material.albedoRoughness.w * material.albedoRoughness.w * tan_o ) ) / 2.0; 
+//	return 1.0 / ( 1.0 + lambda_i + lambda_o );
+//}
+//
+//float f(vec3 lwi, vec3 lwo, float f0)
+//{
+//    vec3 h = normalize( lwi + lwo );
+//    float cosine = dot( h, lwi );
+//    float tmp = ( 1.0 - cosine ) * ( 1.0 - cosine ) * ( 1.0 - cosine ) * ( 1.0 - cosine ) * ( 1.0 - cosine );
+//    return f0 + ( 1.0 - f0 ) * tmp;
+//}
+
 vec3 getLTCSpec()
 {
     // gamma correction
-    vec3 mDiffuse = vec3(0.7f, 0.8f, 0.96f);// * texture(material.diffuse, texcoord).xyz;
-    vec3 mSpecular = ToLinear(vec3(1.f, 1.f, 1.f)); // mDiffuse
+    // vec3 mDiffuse = vec3(0.7f, 0.8f, 0.96f);// * texture(material.diffuse, texcoord).xyz;
+    vec3 mSpecular = vec3(1.f, 1.f, 1.f); 
 
     vec3 result = vec3(0.0f);
 
     vec3 N = normalize(worldNormal);
     vec3 V = normalize(viewPosition - worldPosition);
+    vec3 L = normalize(vec3(0, 1.9, 1) - worldPosition);
     vec3 P = worldPosition;
     float dotNV = clamp(dot(N, V), 0.0f, 1.0f);
+    float dotNL = clamp(dot(N, L), 0.0f, 1.0f);
 
     // use roughness and sqrt(1-cos_theta) to sample M_texture
     vec2 uv = vec2(material.albedoRoughness.w, sqrt(1.0f - dotNV));
@@ -189,13 +210,14 @@ vec3 getLTCSpec()
     translatedPoints[3] = areaLight.points[3] + areaLightTranslate;
 
     // Evaluate LTC shading
-    vec3 diffuse = LTC_Evaluate(N, V, P, mat3(1), translatedPoints, areaLight.twoSided);
+    // vec3 diffuse = LTC_Evaluate(N, V, P, mat3(1), translatedPoints, areaLight.twoSided);
     vec3 specular = LTC_Evaluate(N, V, P, Minv, translatedPoints, areaLight.twoSided);
 
     // GGX BRDF shadowing and Fresnel
     // t2.x: shadowedF90 (F90 normally it should be 1.0)
     // t2.y: Smith function for Geometric Attenuation Term, it is dot(V or L, H).
-    specular *= mSpecular*t2.x + (1.0f - mSpecular) * t2.y;
+    // specular *= mSpecular*t2.x + (1.0f - mSpecular) * t2.y;
+    specular *= (mSpecular * t2.x * (1.0-t2.y))/(4.0*dotNV*dotNL);
 
     // result = areaLight.color * areaLight.intensity * (specular + mDiffuse * diffuse);
     // result = areaLight.color * areaLight.intensity * mDiffuse * diffuse;
@@ -250,7 +272,7 @@ float getRadiance_World(vec3 dir){
     +(1-a)*
     texelFetch(LDTLUT, ivec2(gammaindex+1, Cindex+1), 0).r*maxLDTValue
     );
-    return 30 * (b*value1 + (1-b)*value2)/683;
+    return 300 * (b*value1 + (1-b)*value2)/683;
 }
 
 // Compute solid angle for a planar triangle as seen from the origin
@@ -319,7 +341,7 @@ void main() {
     vec3 n = normalize(n);
 
     // Create orthonormal basis around N
-    vec3 o = normalize(CameraLocation - P);
+    vec3 o = normalize(viewPosition - P);
     float dotNV = dot(n, o);
 
     // Shift shading point away from polygon plane if within epsilon to avoid numerical issues
@@ -437,7 +459,7 @@ void main() {
 
         if (Ld > 0.0) {
             vec3 brdf = c.xyz / 3.14159265359;
-            color += Ld / PolygonArea * brdf;
+            // color += Ld / PolygonArea * brdf;
 
             if(denom > 0){
                 float Le = Ld / denom;
