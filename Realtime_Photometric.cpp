@@ -39,7 +39,7 @@ const unsigned int SCR_HEIGHT = 600;
 const glm::vec3 LIGHT_COLOR = Color::White;
 // 光源乘数
 float IntensityMulti = 1.0;
-std::string lightType = "LINETIK-S_42184482";
+std::string lightType = "ARCOS3_60712332";
 glm::vec3 areaLightTranslate;
 Shader* ltcShaderPtr;
 
@@ -350,7 +350,7 @@ int main()
 	printf("Load OpenGL %d.%d\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 
 	glfwMakeContextCurrent(window);
-    glEnable(GL_FRAMEBUFFER_SRGB);
+    // glEnable(GL_FRAMEBUFFER_SRGB);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
