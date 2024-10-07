@@ -47,7 +47,8 @@ Shader* ltcShaderPtr;
 bool keys[1024]; // activated keys
 
 // 摄像机
-Camera camera(glm::vec3(0, 60.0f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, -90.0f);
+Camera camera(glm::vec3(-25, 5.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f);
+// Camera camera(glm::vec3(0, 60.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f,-90.0f);
 float lastX = (float)SCR_WIDTH / 2.0f;
 float lastY = (float)SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -176,7 +177,6 @@ int SaveScreenshot(const char* filename) {
   stbi_flip_vertically_on_write(1);
 
   int saved = stbi_write_png(filename, SCR_WIDTH, SCR_HEIGHT, 4, data, 0);
-
   free(data);
 
   return saved;
@@ -195,7 +195,7 @@ GLuint loadLDTTexture() {
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, intensityDis[0].size(), intensityDis.size(),
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB, intensityDis[0].size(), intensityDis.size(),
 		0, GL_RGBA, GL_FLOAT, LDTLUT);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -255,7 +255,7 @@ void incrementRoughness(float step)
 }
 void incrementLightIntensity(float step)
 {
-	static float intensity = 4.0f;
+	static float intensity = 1.0f;
 	intensity += step;
 	intensity = glm::clamp(intensity, 0.0f, 10.0f);
 	//std::cout << "intensity: " << intensity << '\n';
@@ -350,7 +350,7 @@ int main()
 	printf("Load OpenGL %d.%d\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 
 	glfwMakeContextCurrent(window);
-    // glEnable(GL_FRAMEBUFFER_SRGB);
+    //glEnable(GL_FRAMEBUFFER_SRGB);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
