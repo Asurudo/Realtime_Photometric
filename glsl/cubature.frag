@@ -15,6 +15,8 @@ uniform float ldtdc;
 uniform float ldtdg;
 uniform float IntensityMulti;
 uniform float maxLDTValue;
+uniform float randNum1;
+uniform float randNum2;
 
 uniform sampler2D LDTLUT; 
 uniform float LUT_SIZE_X;
@@ -152,34 +154,45 @@ const float gamma = 2.2;
 vec3 ToLinear(vec3 v) { return PowVec3(v, gamma); }
 vec3 ToSRGB(vec3 v)   { return PowVec3(v, 1.0/gamma); }
 
-//float g(vec3 lwi, vec3 lwo)
-//{
-//	float tan_i = 1.0 / ( lwi.y * lwi.y ) - 1.0; 
-//	float tan_o = 1.0 / ( lwo.y * lwo.y ) - 1.0; 
-//	float lambda_i = ( - 1.0 + sqrt( 1.0 + material.albedoRoughness.w * material.albedoRoughness.w * tan_i ) ) / 2.0; 
-//	float lambda_o = ( - 1.0 + sqrt( 1.0 + material.albedoRoughness.w * material.albedoRoughness.w * tan_o ) ) / 2.0; 
-//	return 1.0 / ( 1.0 + lambda_i + lambda_o );
-//}
-//
-//float f(vec3 lwi, vec3 lwo, float f0)
-//{
-//    vec3 h = normalize( lwi + lwo );
-//    float cosine = dot( h, lwi );
-//    float tmp = ( 1.0 - cosine ) * ( 1.0 - cosine ) * ( 1.0 - cosine ) * ( 1.0 - cosine ) * ( 1.0 - cosine );
-//    return f0 + ( 1.0 - f0 ) * tmp;
-//}
+float g(vec3 lwi, vec3 lwo)
+{
+	float tan_i = 1.0 / ( lwi.y * lwi.y ) - 1.0; 
+	float tan_o = 1.0 / ( lwo.y * lwo.y ) - 1.0; 
+	float lambda_i = ( - 1.0 + sqrt( 1.0 + material.albedoRoughness.w * material.albedoRoughness.w * tan_i ) ) / 2.0; 
+	float lambda_o = ( - 1.0 + sqrt( 1.0 + material.albedoRoughness.w * material.albedoRoughness.w * tan_o ) ) / 2.0; 
+	return 1.0 / ( 1.0 + lambda_i + lambda_o );
+}
+
+float d(vec3 lwi, vec3 lwo)
+{
+  vec3 h = normalize( lwi + lwo );
+  float cos2 = h.y * h.y;
+  float sin2 = max(0.0, 1.0 - cos2);
+  float m_alpha =  material.albedoRoughness.w;
+  float denom = 3.141592653 * m_alpha * m_alpha * ( cos2 + sin2 / ( m_alpha * m_alpha ) ) * ( cos2 + sin2 / ( m_alpha * m_alpha ) );
+  return 1.0 / denom;
+
+}
+
+float f(vec3 lwi, vec3 lwo, float f0)
+{
+    vec3 h = normalize( lwi + lwo );
+    float cosine = dot( h, lwi );
+    float tmp = ( 1.0 - cosine ) * ( 1.0 - cosine ) * ( 1.0 - cosine ) * ( 1.0 - cosine ) * ( 1.0 - cosine );
+    return f0 + ( 1.0 - f0 ) * tmp;
+}
 
 vec3 getLTCSpec()
 {
     // gamma correction
     // vec3 mDiffuse = vec3(0.7f, 0.8f, 0.96f);// * texture(material.diffuse, texcoord).xyz;
-    vec3 ks = vec3(0.3f, 0.3f, 0.3f); 
+    // vec3 ks = vec3((1-material.albedoRoughness.w)/4, (1-material.albedoRoughness.w)/4, (1-material.albedoRoughness.w)/4); 
 
     vec3 result = vec3(0.0f);
 
     vec3 N = normalize(worldNormal);
     vec3 V = normalize(viewPosition - worldPosition);
-    vec3 L = normalize(vec3(0, 1.5, 1) - worldPosition);
+    vec3 L = normalize(vec3(0, 3.4, 0) - worldPosition);
     vec3 P = worldPosition;
     float dotNV = clamp(dot(N, V), 0.0f, 1.0f);
     float dotNL = clamp(dot(N, L), 0.0f, 1.0f);
@@ -218,15 +231,14 @@ vec3 getLTCSpec()
     // t2.x: shadowedF90 (F90 normally it should be 1.0)
     // t2.y: Smith function for Geometric Attenuation Term, it is dot(V or L, H).
     float F90 = t2.x;
-    float G = t2.y;
-    float D = t2.w;
+    float F0 = 1.0;
+
     // specular *= F0*t2.x + (1.0f - F0) * t2.y;
     //specular *= (F0+(1.0-F0)*pow((1-dotNV),5))*D/(4.0*dotNV*dotNL);
-    specular *= (ks*F90 + (1-ks)*G)/ (4.0*dotNV*dotNL);
+    specular *= f(L,V,F0)*g(L,V)*d(L,V)/ (4.0*dotNV*dotNL);
     // result = areaLight.color * areaLight.intensity * (specular + mDiffuse * diffuse);
     // result = areaLight.color * areaLight.intensity * mDiffuse * diffuse;
     result = areaLight.color * specular;
-    //return ToSRGB(result);
     return result;
 }
 
@@ -275,7 +287,7 @@ float getRadiance_World(vec3 dir){
     float tex4 = texelFetch(LDTLUT, ivec2(gammaindex+1, Cindex+1), 0).r;
 
     float value2 = (a*tex3*maxLDTValue+(1-a)*tex4*maxLDTValue);
-    return 300 * (b*value1 + (1-b)*value2)/683;
+    return 600 * (b*value1 + (1-b)*value2)/683;
 }
 
 // Compute solid angle for a planar triangle as seen from the origin
@@ -458,15 +470,18 @@ void main() {
 
         if (Ld > 0.0) {
             vec3 brdf = c.xyz / 3.14159265359;
+            // the diffuse
             // color += Ld / PolygonArea * brdf;
 
             if(denom > 0){
                 float Le = Ld / denom;
+                // the specular
                 color += Le * getLTCSpec();
             }
         }
     }
     color.rgb *= IntensityMulti;
+    // color = getLTCSpec();
     color.rgb = pow(color.rgb, vec3(1.0 / 2.2));
     fragColor = vec4(color, pow(1.0, 1.0/2.2));
 }

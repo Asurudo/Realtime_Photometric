@@ -1,6 +1,7 @@
 ﻿#include<iostream>
 #include<cstdio>
 #include<string>
+#include <random>
 #include<algorithm>
 #include<cmath>
 #include <filesystem>
@@ -39,7 +40,8 @@ const unsigned int SCR_HEIGHT = 600;
 const glm::vec3 LIGHT_COLOR = Color::White;
 // 光源乘数
 float IntensityMulti = 1.0;
-std::string lightType = "ARCOS3_60712332";
+std::string lightType = "LINETIK-S_42184482";
+// std::string lightType = "PERLUCE_42182932";
 glm::vec3 areaLightTranslate;
 Shader* ltcShaderPtr;
 
@@ -47,7 +49,8 @@ Shader* ltcShaderPtr;
 bool keys[1024]; // activated keys
 
 // 摄像机
-Camera camera(glm::vec3(-25, 5.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f);
+// Camera camera(glm::vec3(-28.8, 7.4f, 12.0), glm::vec3(0.0f, 1.0f, 0.0f), -39.3f, -22.6f);
+Camera camera(glm::vec3(-25, 2.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f);
 // Camera camera(glm::vec3(0, 60.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f,-90.0f);
 float lastX = (float)SCR_WIDTH / 2.0f;
 float lastY = (float)SCR_HEIGHT / 2.0f;
@@ -195,8 +198,8 @@ GLuint loadLDTTexture() {
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB, intensityDis[0].size(), intensityDis.size(),
-		0, GL_RGBA, GL_FLOAT, LDTLUT);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, intensityDis[0].size(),
+                     intensityDis.size(), 0, GL_RGBA, GL_FLOAT, LDTLUT);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -245,7 +248,7 @@ GLuint loadLUTTexture()
 void incrementRoughness(float step)
 {
 	static glm::vec3 color = Color::White;
-	static float roughness = 0.2f;
+	static float roughness = 0.6f;
 	roughness += step;
 	roughness = glm::clamp(roughness, 0.0f, 1.0f);
 	//std::cout << "roughness: " << roughness << '\n';
@@ -444,6 +447,9 @@ int main()
 	// 3D OBJECTS
 	configureMockupData();
 	areaLightTranslate = glm::vec3(0.0f, 0.0f, 0.0f);
+    std::random_device rd;  
+    std::mt19937 gen(rd());  
+    std::uniform_real_distribution<> dis(0.0, 1.0);
 	// 预处理 -------------------------------------------------------------------------------------------------end
 	
 	while (!glfwWindowShouldClose(window))
@@ -456,6 +462,7 @@ int main()
 		glfwPollEvents();
 		do_movement(deltaTime);
 
+        
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -495,6 +502,10 @@ int main()
             shaderPlane.setInt("LTC2", 2);
 			shaderPlane.setFloat("LUT_SIZE_X", intensityDis.size());
 			shaderPlane.setFloat("LUT_SIZE_Y", intensityDis[0].size());
+            float randomValue1 = dis(gen);
+            float randomValue2 = dis(gen);
+            shaderPlane.setFloat("randNum1", randomValue1);
+            shaderPlane.setFloat("randNum2", randomValue2);
 			App::lightChanged = false; 
 		}
 			
