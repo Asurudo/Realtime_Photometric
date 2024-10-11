@@ -13,6 +13,7 @@ namespace App
     float *IntensityMultiPtr;
     glm::vec3 *CameraPosition;
     float *CameraYaw, *CameraPitch;
+    float *Roughness;
 
     void RenderUI()
     {
@@ -47,6 +48,7 @@ namespace App
         ImGui::Text("Camera Poisiton: (%.1f, %.1f, %.1f)", CameraPosition->x, CameraPosition->y, CameraPosition->z);
         ImGui::Text("Camera Yaw: %.3f", *CameraYaw);
         ImGui::Text("Camera Pitch: %.3f", *CameraPitch);
+        ImGui::Text("Roughness: %.3f", *Roughness);
         // ImGui::SameLine();
         // ImGui::Text("Value %f", *IntensityMultiPtr);
     }

@@ -41,6 +41,9 @@ const glm::vec3 LIGHT_COLOR = Color::White;
 // 光源乘数
 float IntensityMulti = 1.0;
 std::string lightType = "LINETIK-S_42184482";
+// 粗糙度
+static float roughness = 0.6f;
+
 // std::string lightType = "PERLUCE_42182932";
 glm::vec3 areaLightTranslate;
 Shader* ltcShaderPtr;
@@ -248,12 +251,13 @@ GLuint loadLUTTexture()
 void incrementRoughness(float step)
 {
 	static glm::vec3 color = Color::White;
-	static float roughness = 0.6f;
 	roughness += step;
-	roughness = glm::clamp(roughness, 0.0f, 1.0f);
+    roughness = glm::clamp(roughness, 0.0f, 1.0f);
+    float roughnessChousei = 1 - pow((1 - roughness), 3.3);
 	//std::cout << "roughness: " << roughness << '\n';
 	ltcShaderPtr->use();
-	ltcShaderPtr->setVec4("material.albedoRoughness", glm::vec4(color, roughness));
+        ltcShaderPtr->setVec4("material.albedoRoughness",
+                              glm::vec4(color, roughnessChousei));
 	glUseProgram(0);
 }
 void incrementLightIntensity(float step)
@@ -473,6 +477,7 @@ int main()
 		App::CameraPosition = &camera.Position;
 		App::CameraYaw = &camera.Yaw;
 		App::CameraPitch = &camera.Pitch;
+        App::Roughness = &roughness;
 		App::RenderUI();
 		if (App::lightChanged)
 		{

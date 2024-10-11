@@ -86,13 +86,13 @@ float IntegrateEdge(vec3 v1, vec3 v2)
 // P is fragPos in world space (LTC distribution)
 vec3 LTC_Evaluate(vec3 N, vec3 V, vec3 P, mat3 Minv, vec3 points[4], bool twoSided)
 {
-    // construct orthonormal basis around N
-    vec3 T1, T2;
-    T1 = normalize(V - N * dot(V, N));
-    T2 = cross(N, T1);
-
-    // rotate area light in (T1, T2, N) basis
-    Minv = Minv * transpose(mat3(T1, T2, N));
+//    // construct orthonormal basis around N
+//    vec3 T1, T2;
+//    T1 = normalize(V - N * dot(V, N));
+//    T2 = cross(N, T1);
+//
+//    // rotate area light in (T1, T2, N) basis
+//    Minv = Minv * transpose(mat3(T1, T2, N));
 
     // polygon (allocate 4 vertices for clipping)
     vec3 L[4];
@@ -194,7 +194,7 @@ vec3 getLTCSpec()
     vec3 V = normalize(viewPosition - worldPosition);
     vec3 L = normalize(vec3(0, 3.4, 0) - worldPosition);
     vec3 P = worldPosition;
-    float dotNV = clamp(dot(N, V), 0.0f, 1.0f);
+    float dotNV = V.y;//clamp(dot(N, V), 0.0f, 1.0f);
     float dotNL = clamp(dot(N, L), 0.0f, 1.0f);
 
     // use roughness and sqrt(1-cos_theta) to sample M_texture
@@ -223,6 +223,15 @@ vec3 getLTCSpec()
     translatedPoints[2] = areaLight.points[2] + areaLightTranslate;
     translatedPoints[3] = areaLight.points[3] + areaLightTranslate;
 
+    // construct orthonormal basis around N
+    vec3 T1, T2;
+    T1 = normalize(V - N * dot(V, N));
+    //T1 = normalize(cross(N, (abs(N.x) < abs(N.z)) ? vec3(0.0, -N.z, N.x) : vec3(-N.y, N.x, 0.0)));
+    T2 = cross(N, T1);
+
+    // rotate area light in (T1, T2, N) basis
+    Minv = Minv * transpose(mat3(T1, T2, N));
+
     // Evaluate LTC shading
     // vec3 diffuse = LTC_Evaluate(N, V, P, mat3(1), translatedPoints, areaLight.twoSided);
     vec3 specular = LTC_Evaluate(N, V, P, Minv, translatedPoints, areaLight.twoSided);
@@ -232,10 +241,15 @@ vec3 getLTCSpec()
     // t2.y: Smith function for Geometric Attenuation Term, it is dot(V or L, H).
     float F90 = t2.x;
     float F0 = 1.0;
-
+    T1 = normalize(cross(N, (abs(N.x) < abs(N.z)) ? vec3(0.0, -N.z, N.x) : vec3(-N.y, N.x, 0.0)));
+    T2 = cross(N, T1);
+    L *= transpose(mat3(T1, N, T2));
+    V *= transpose(mat3(T1, N, T2));
     // specular *= F0*t2.x + (1.0f - F0) * t2.y;
-    //specular *= (F0+(1.0-F0)*pow((1-dotNV),5))*D/(4.0*dotNV*dotNL);
-    specular *= f(L,V,F0)*g(L,V)*d(L,V)/ (4.0*dotNV*dotNL);
+    // float brdfValue = f(V,L,F0)*g(V,L)*d(V,L)/ (4.0*dotNV*dotNL);
+    // vec3 brdf = vec3(brdfValue, brdfValue, brdfValue);
+    // specular *= brdf*t2.x + (1.0f - brdf) * t2.y;
+    specular *= f(V,L,F0)*d(V,L)*g(V,L)/ (4.0*dotNV*dotNL);
     // result = areaLight.color * areaLight.intensity * (specular + mDiffuse * diffuse);
     // result = areaLight.color * areaLight.intensity * mDiffuse * diffuse;
     result = areaLight.color * specular;
@@ -261,6 +275,7 @@ vec3 mix(vec3 a, vec3 b, float t) {
 }
 
 float getRadiance_World(vec3 dir){
+    return 50;
     const float M_PI = 3.14159265359;
     vec3 v = normalize(dir);
     float C = atan(-v.y, -v.z) + M_PI, gamma = M_PI - acos(v.x);
@@ -346,8 +361,8 @@ ClosestPoint clampPointToPolygon(vec3 polygonVertices[MAX_VERTEXCOUNT_PLUS_ONE],
 
 // Main shading procedure
 void main() {
-    //fragColor = vec4(getLTCSpec(), 1.0);
-    //return ;
+//    fragColor = vec4(pow(getRadiance_World(vec3(0))*getLTCSpec().rgb, vec3(1.0 / 2.2)), 1.0);
+//    return ;
     vec3 P = wp;
     vec3 n = normalize(n);
 
@@ -481,7 +496,6 @@ void main() {
         }
     }
     color.rgb *= IntensityMulti;
-    // color = getLTCSpec();
     color.rgb = pow(color.rgb, vec3(1.0 / 2.2));
-    fragColor = vec4(color, pow(1.0, 1.0/2.2));
+    fragColor = vec4(color, 1.0);
 }
