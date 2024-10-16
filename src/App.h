@@ -43,7 +43,7 @@ namespace App
         //     ImGui::DragFloat("val", &value);
         // }
         //使用从0.0f到1.0f的滑块编辑1个浮动
-        ImGui::SliderFloat("Exposure", IntensityMultiPtr, 0.0f, 2.0f);
+        ImGui::SliderFloat("Exposure", IntensityMultiPtr, 0.0f, 20.0f);
 
         ImGui::Text("Camera Poisiton: (%.1f, %.1f, %.1f)", CameraPosition->x, CameraPosition->y, CameraPosition->z);
         ImGui::Text("Camera Yaw: %.3f", *CameraYaw);

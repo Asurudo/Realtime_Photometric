@@ -40,9 +40,9 @@ const unsigned int SCR_HEIGHT = 600;
 const glm::vec3 LIGHT_COLOR = Color::White;
 // 光源乘数
 float IntensityMulti = 1.0;
-std::string lightType = "LINETIK-S_42184482";
+std::string lightType = "MIREL_42925637";
 // 粗糙度
-static float roughness = 0.6f;
+static float roughness = 0.1f;
 
 // std::string lightType = "PERLUCE_42182932";
 glm::vec3 areaLightTranslate;
@@ -54,7 +54,7 @@ bool keys[1024]; // activated keys
 // 摄像机
 // Camera camera(glm::vec3(-28.8, 7.4f, 12.0), glm::vec3(0.0f, 1.0f, 0.0f), -39.3f, -22.6f);
 Camera camera(glm::vec3(-25, 2.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f);
-// Camera camera(glm::vec3(0, 60.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f,-90.0f);
+//Camera camera(glm::vec3(0, 60.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f,-90.0f);
 float lastX = (float)SCR_WIDTH / 2.0f;
 float lastY = (float)SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -253,7 +253,8 @@ void incrementRoughness(float step)
 	static glm::vec3 color = Color::White;
 	roughness += step;
     roughness = glm::clamp(roughness, 0.0f, 1.0f);
-    float roughnessChousei = 1 - pow((1 - roughness), 3.3);
+        float roughnessChousei =
+            1 - pow((1 - roughness), 4.0 - 3.0 * (roughness));
 	//std::cout << "roughness: " << roughness << '\n';
 	ltcShaderPtr->use();
         ltcShaderPtr->setVec4("material.albedoRoughness",
