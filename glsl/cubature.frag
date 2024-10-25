@@ -95,7 +95,7 @@ vec3 LTC_Evaluate(vec3 N, vec3 V, vec3 P, mat3 Minv, vec3 points[4], bool twoSid
     Minv = Minv * transpose(mat3(T1, T2, N));
 
     // polygon (allocate 4 vertices for clipping)
-    vec3 L[4];
+    vec3 L[5];
     // transform polygon from LTC back to origin Do (cosine weighted)
     L[0] = Minv * (points[0] - P);
     L[1] = Minv * (points[1] - P);
@@ -128,18 +128,18 @@ vec3 LTC_Evaluate(vec3 N, vec3 V, vec3 P, mat3 Minv, vec3 points[4], bool twoSid
     if (behind)
         z = -z;
 
-    vec2 uv = vec2(z*0.5f + 0.5f, len); // range [0, 1]
-    uv = uv*LUT_SCALE + LUT_BIAS;
-
-    // Fetch the form factor for horizon clipping
-    float scale = texture(LTC2, uv).w;
-
-    float sum = len*scale;
+//    vec2 uv = vec2(z*0.5f + 0.5f, len); // range [0, 1]
+//    uv = uv*LUT_SCALE + LUT_BIAS;
+//
+//    // Fetch the form factor for horizon clipping
+//    float scale = 1.0;//texture(LTC2, uv).x;
+////
+//    float sum = len*scale;
     if (!behind && !twoSided)
-        sum = 0.0;
+        len = 0.0;
 
     // Outgoing radiance (solid angle) for the entire polygon
-    vec3 Lo_i = vec3(sum, sum, sum);
+    vec3 Lo_i = vec3(len, len, len);
     return Lo_i;
 }
 
@@ -182,6 +182,41 @@ float f(vec3 lwi, vec3 lwo, float f0)
     return f0 + ( 1.0 - f0 ) * tmp;
 }
 
+float eval(vec3 V, vec3 L, float alpha)
+{
+		if(V.y <= 0)
+		{
+			return 0;
+		}
+
+		// masking
+		float a_V = 1.0f / alpha / tan(acos(V.y));
+		float LambdaV = (V.y<1.0f) ? 0.5f * (-1.0f + sqrt(1.0f + 1.0f/a_V/a_V)) : 0.0f;
+	    float G1 = 1.0f / (1.0f + LambdaV);
+
+		// shadowing
+		float G2;
+		if(L.y <= 0.0f)
+			G2 = 0;
+		else
+		{
+			float a_L = 1.0f / alpha / tan(acos(L.y));
+			float LambdaL = (L.y<1.0f) ? 0.5f * (-1.0f + sqrt(1.0f + 1.0f/a_L/a_L)) : 0.0f;
+			G2 = 1.0f / (1.0f + LambdaV + LambdaL);
+		}
+
+		// D
+		vec3 H = normalize(V+L);
+		float slopex = H.x/H.y;
+		float slopez = H.z/H.y;
+		float D = 1.0f / (1.0f + (slopex*slopex+slopez*slopez)/alpha/alpha);
+		D = D*D;
+		D = D / (3.14159f * alpha * alpha * H.y*H.y*H.y*H.y);
+
+		float res = D * G2 / 4.0f / V.y;
+		return res;
+}
+
 vec3 getLTCSpec()
 {
     // gamma correction
@@ -191,17 +226,19 @@ vec3 getLTCSpec()
     vec3 result = vec3(0.0f);
 
     vec3 N = normalize(worldNormal);
-    vec3 V = normalize(viewPosition - worldPosition);
-    vec3 L = normalize(vec3(0, 1.8, 0) - worldPosition);
+    vec3 V = normalize(viewPosition-worldPosition);
+    //vec3 L = normalize(vec3(0, 3.5, 0) - worldPosition);
     vec3 P = worldPosition;
-    float dotNV = V.y;//clamp(dot(N, V), 0.0f, 1.0f);
-    float dotNL = clamp(dot(N, L), 0.0f, 1.0f);
+    float dotNV = clamp(dot(N, V), 0.0f, 1.0f);
+    //float dotNL = clamp(dot(N, L), 0.0f, 1.0f);
 
     // use roughness and sqrt(1-cos_theta) to sample M_texture
-    vec2 uv = vec2(material.albedoRoughness.w, sqrt(1-dotNV));
-    // return vec3(uv, 1.0);
+   // vec2 uv = vec2(material.albedoRoughness.w*material.albedoRoughness.w, acos(dotNV)/3.1415926);
+     vec2 uv = vec2(material.albedoRoughness.w, 1-acos(dotNV)/3.141592653);
+    //return vec3(uv, 1.0);
 
-    // vec2 uv = vec2(material.albedoRoughness.w, sqrt(1.0f-dotNV));
+    //vec2 uv = vec2(material.albedoRoughness.w, sqrt(1.0f-dotNV));
+    
     uv = uv*LUT_SCALE + LUT_BIAS;
     
     // get 4 parameters for inverse_M
@@ -209,13 +246,21 @@ vec3 getLTCSpec()
 
     // Get 2 parameters for Fresnel calculation
     vec4 t2 = texture(LTC2, uv);
+    
+    float a = t1.x, b = t1.y, c = t1.z, d = t1.w;
+
+//    mat3 Minv = mat3(
+//        vec3(a*c/(a*a-a*b*d), 0, -b*c/(a-b*d)),
+//        vec3(  0,  1,  0),
+//        vec3(-d*c/(a-b*d), 0, a*c/(a-b*d))
+//    );
 
     mat3 Minv = mat3(
-        vec3(t1.x, 0, t1.y),
-        vec3(  0,  1,    0),
-        vec3(t1.z, 0, t1.w)
+        vec3( a, 0, b),
+        vec3( 0, 1, 0),
+        vec3( c, 0, d)
     );
-
+    //Minv = inverse(Minv);
     // translate light source for testing
     vec3 translatedPoints[4];
     translatedPoints[0] = areaLight.points[0] + areaLightTranslate;
@@ -235,27 +280,26 @@ vec3 getLTCSpec()
     // Evaluate LTC shading
     vec3 diffuse = LTC_Evaluate(N, V, P, mat3(1), translatedPoints, areaLight.twoSided);
     vec3 specular = LTC_Evaluate(N, V, P, Minv, translatedPoints, areaLight.twoSided);
-
+    specular *= t2.x;
     // GGX BRDF shadowing and Fresnel
     // t2.x: shadowedF90 (F90 normally it should be 1.0)
     // t2.y: Smith function for Geometric Attenuation Term, it is dot(V or L, H).
-    float F90 = t2.x;
-    float F0 = 1.0;
 //    T1 = normalize(cross(N, (abs(N.x) < abs(N.z)) ? vec3(0.0, -N.z, N.x) : vec3(-N.y, N.x, 0.0)));
 //    T2 = cross(N, T1);
 //    L *= transpose(mat3(T1, N, T2));
 //    V *= transpose(mat3(T1, N, T2));
-    // specular *= F0*t2.x + (1.0f - F0) * t2.y;
+    //specular *= 0.63*t2.x + (1.0f - 0.63) * t2.y;
     // float brdfValue = f(V,L,F0)*g(V,L)*d(V,L)/ (4.0*dotNV*dotNL);
     // vec3 brdf = vec3(brdfValue, brdfValue, brdfValue);
     // specular *= brdf*t2.x + (1.0f - brdf) * t2.y;
     // specular *= f(V,L,F0)*d(V,L)*g(V,L)/ (4.0*dotNV*dotNL);
-    specular *= 0.4*t2.x + (1-0.4)*t2.y;
-    specular *= f(V,L,F0)*d(V,L)*g(V,L)/ (4.0*dotNV*dotNL);
+     //specular *= t2.x + 0.9*t2.y;
+    //specular *= f(V,L,F0)*d(V,L)*g(V,L)/ (4.0*dotNV*dotNL);
+    //specular *= eval(V, L, material.albedoRoughness.w);
     // result = areaLight.color * areaLight.intensity * (specular + mDiffuse * diffuse);
     // result = areaLight.color * areaLight.intensity * mDiffuse * diffuse;
-    result = areaLight.color * (specular + diffuse*0.02);
-    return result;
+    result = areaLight.color * (specular);
+    return result/3.141592653/3.5;
 }
 
 out vec4 fragColor;
@@ -277,6 +321,7 @@ vec3 mix(vec3 a, vec3 b, float t) {
 }
 
 float getRadiance_World(vec3 dir){
+    return 50;
     const float M_PI = 3.14159265359;
     vec3 v = normalize(dir);
     float C = atan(-v.y, -v.z) + M_PI, gamma = M_PI - acos(v.x);
@@ -326,7 +371,7 @@ ClosestPoint clampPointToPolygon(vec3 polygonVertices[MAX_VERTEXCOUNT_PLUS_ONE],
     result.caseType = 0;
     result.index = -1;
     result.point = p;
-    float smallestDist = 100000.0;
+    float smallestDist = 1000.0;
 
     float flipSng = polygonClockwiseOrder ? -1.0 : 1.0;
     
@@ -362,8 +407,14 @@ ClosestPoint clampPointToPolygon(vec3 polygonVertices[MAX_VERTEXCOUNT_PLUS_ONE],
 
 // Main shading procedure
 void main() {
+    if(wp.x>0){
+        fragColor = vec4(0);
+        return ;
+    }
+        
     fragColor = vec4(pow(getRadiance_World(vec3(0))*getLTCSpec().rgb, vec3(1.0 / 2.2)), 1.0);
-    //return ;
+    return ;
+
     vec3 P = wp;
     vec3 n = normalize(n);
 
@@ -497,6 +548,6 @@ void main() {
         }
     }
     color.rgb *= IntensityMulti;
-    color.rgb = pow(color.rgb, vec3(1.0 / 2.2));
+    //color.rgb = pow(color.rgb, vec3(1.0 / 2.2));
     fragColor = vec4(color, 1.0);
 }
