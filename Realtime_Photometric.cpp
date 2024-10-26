@@ -42,7 +42,7 @@ const glm::vec3 LIGHT_COLOR = Color::White;
 float IntensityMulti = 1.0;
 std::string lightType = "MIREL_42925637";
 // 粗糙度
-static float roughness = 0.18;
+static float roughness = 0.2;
 
 // std::string lightType = "PERLUCE_42182932";
 glm::vec3 areaLightTranslate;
@@ -252,7 +252,7 @@ void incrementRoughness(float step)
 {
 	static glm::vec3 color = Color::White;
 	roughness += step;
-    roughness = glm::clamp(roughness, 0.05f, 0.95f);
+    roughness = glm::clamp(roughness, 0.02f, 1.f);
             //1 - pow((1 - roughness), 4.0 - 3.0 * (roughness));
 	//std::cout << "roughness: " << roughness << '\n';
 	ltcShaderPtr->use();

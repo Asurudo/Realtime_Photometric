@@ -80,6 +80,10 @@ vec3 IntegrateEdgeVec(vec3 v1, vec3 v2)
 
 float IntegrateEdge(vec3 v1, vec3 v2)
 {
+    float CosTheta = dot(v1, v2);
+    float Theta = acos(CosTheta);
+    return (cross(v1, v2) * ((Theta > 0.0001) ? Theta/sin(Theta) : 1.0)).z;
+    
     return IntegrateEdgeVec(v1, v2).z;
 }
 
@@ -93,6 +97,7 @@ vec3 LTC_Evaluate(vec3 N, vec3 V, vec3 P, mat3 Minv, vec3 points[4], bool twoSid
 
     // rotate area light in (T1, T2, N) basis
     Minv = Minv * transpose(mat3(T1, T2, N));
+    //Minv = Minv * transpose(mat3(N, T2, T1));
 
     // polygon (allocate 4 vertices for clipping)
     vec3 L[5];
@@ -101,6 +106,7 @@ vec3 LTC_Evaluate(vec3 N, vec3 V, vec3 P, mat3 Minv, vec3 points[4], bool twoSid
     L[1] = Minv * (points[1] - P);
     L[2] = Minv * (points[2] - P);
     L[3] = Minv * (points[3] - P);
+    L[4] = L[3];
 
     // use tabulated horizon-clipped sphere
     // check if the shading point is behind the light
@@ -113,13 +119,15 @@ vec3 LTC_Evaluate(vec3 N, vec3 V, vec3 P, mat3 Minv, vec3 points[4], bool twoSid
     L[1] = normalize(L[1]);
     L[2] = normalize(L[2]);
     L[3] = normalize(L[3]);
+    L[4] = normalize(L[4]);
 
     // integrate
     vec3 vsum = vec3(0.0);
     vsum += IntegrateEdgeVec(L[0], L[1]);
     vsum += IntegrateEdgeVec(L[1], L[2]);
     vsum += IntegrateEdgeVec(L[2], L[3]);
-    vsum += IntegrateEdgeVec(L[3], L[0]);
+    vsum += IntegrateEdgeVec(L[3], L[4]);
+    vsum += IntegrateEdgeVec(L[4], L[0]);
 
     // form factor of the polygon in direction vsum
     float len = length(vsum);
@@ -132,7 +140,7 @@ vec3 LTC_Evaluate(vec3 N, vec3 V, vec3 P, mat3 Minv, vec3 points[4], bool twoSid
 //    uv = uv*LUT_SCALE + LUT_BIAS;
 //
 //    // Fetch the form factor for horizon clipping
-//    float scale = 1.0;//texture(LTC2, uv).x;
+//    float scale = texture(LTC2, uv).x;
 ////
 //    float sum = len*scale;
     if (!behind && !twoSided)
@@ -233,12 +241,11 @@ vec3 getLTCSpec()
     //float dotNL = clamp(dot(N, L), 0.0f, 1.0f);
 
     // use roughness and sqrt(1-cos_theta) to sample M_texture
-   // vec2 uv = vec2(material.albedoRoughness.w*material.albedoRoughness.w, acos(dotNV)/3.1415926);
-     vec2 uv = vec2(material.albedoRoughness.w, 1-acos(dotNV)/3.141592653);
+    //vec2 uv = vec2(material.albedoRoughness.w, acos(dotNV)/3.1415926);
+     vec2 uv = vec2(material.albedoRoughness.w, 1.0-acos(dotNV)/3.141592653);
     //return vec3(uv, 1.0);
 
     //vec2 uv = vec2(material.albedoRoughness.w, sqrt(1.0f-dotNV));
-    
     uv = uv*LUT_SCALE + LUT_BIAS;
     
     // get 4 parameters for inverse_M
@@ -260,7 +267,13 @@ vec3 getLTCSpec()
         vec3( 0, 1, 0),
         vec3( c, 0, d)
     );
-    //Minv = inverse(Minv);
+
+//    mat3 Minv = mat3(
+//        vec3( a, 0, b),
+//        vec3( 0, c, 0),
+//        vec3( d, 0, 1)
+//    );
+//    Minv = inverse(Minv);
     // translate light source for testing
     vec3 translatedPoints[4];
     translatedPoints[0] = areaLight.points[0] + areaLightTranslate;
@@ -298,8 +311,8 @@ vec3 getLTCSpec()
     //specular *= eval(V, L, material.albedoRoughness.w);
     // result = areaLight.color * areaLight.intensity * (specular + mDiffuse * diffuse);
     // result = areaLight.color * areaLight.intensity * mDiffuse * diffuse;
-    result = areaLight.color * (specular);
-    return result/3.141592653/3.5;
+    result = areaLight.color * ((1.0-material.albedoRoughness.w)*specular+material.albedoRoughness.w*diffuse);
+    return result/3.141592653/2;
 }
 
 out vec4 fragColor;
@@ -412,7 +425,8 @@ void main() {
         return ;
     }
         
-    fragColor = vec4(pow(getRadiance_World(vec3(0))*getLTCSpec().rgb, vec3(1.0 / 2.2)), 1.0);
+    fragColor = vec4(getRadiance_World(vec3(0))*getLTCSpec().rgb,1.0);
+    //fragColor = vec4(pow(getRadiance_World(vec3(0))*getLTCSpec().rgb, vec3(1.0 / 2.2)), 1.0);;
     return ;
 
     vec3 P = wp;
