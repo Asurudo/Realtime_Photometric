@@ -225,6 +225,10 @@ float eval(vec3 V, vec3 L, float alpha)
 		return res;
 }
 
+float ReflectivityAdjust(float dotNV){
+    return clamp(1, 0, (1.0-dotNV)+0.1)*2;
+}
+
 vec3 getLTCSpec()
 {
     // gamma correction
@@ -241,7 +245,6 @@ vec3 getLTCSpec()
     //float dotNL = clamp(dot(N, L), 0.0f, 1.0f);
 
     // use roughness and sqrt(1-cos_theta) to sample M_texture
-    //vec2 uv = vec2(material.albedoRoughness.w, acos(dotNV)/3.1415926);
      vec2 uv = vec2(material.albedoRoughness.w, 1.0-acos(dotNV)/3.141592653);
     //return vec3(uv, 1.0);
 
@@ -274,6 +277,7 @@ vec3 getLTCSpec()
 //        vec3( d, 0, 1)
 //    );
 //    Minv = inverse(Minv);
+
     // translate light source for testing
     vec3 translatedPoints[4];
     translatedPoints[0] = areaLight.points[0] + areaLightTranslate;
@@ -312,6 +316,7 @@ vec3 getLTCSpec()
     // result = areaLight.color * areaLight.intensity * (specular + mDiffuse * diffuse);
     // result = areaLight.color * areaLight.intensity * mDiffuse * diffuse;
     result = areaLight.color * ((1.0-material.albedoRoughness.w)*specular+material.albedoRoughness.w*diffuse);
+    //result = areaLight.color * specular;
     return result/3.141592653/2;
 }
 
@@ -418,10 +423,11 @@ ClosestPoint clampPointToPolygon(vec3 polygonVertices[MAX_VERTEXCOUNT_PLUS_ONE],
     return result;
 }
 
+
 // Main shading procedure
 void main() {
     if(wp.x>0){
-        fragColor = vec4(0);
+        fragColor = vec4(0,0,0,1.0);
         return ;
     }
         
@@ -548,20 +554,22 @@ void main() {
             v1out = v2out;
             v1Le = v2Le;
         }
-
+        vec3 N = normalize(worldNormal);
+        vec3 V = normalize(viewPosition-worldPosition);
         if (Ld > 0.0) {
             vec3 brdf = c.xyz / 3.14159265359;
             // the diffuse
-            // color += Ld / PolygonArea * brdf;
+             color += Ld / PolygonArea * brdf * material.albedoRoughness.w * ReflectivityAdjust(dot(N ,V));
 
             if(denom > 0){
                 float Le = Ld / denom;
                 // the specular
-                color += Le * getLTCSpec();
+                
+                color += Le * getLTCSpec() * (1.0-material.albedoRoughness.w) * ReflectivityAdjust(dot(N ,V));
             }
         }
     }
     color.rgb *= IntensityMulti;
-    //color.rgb = pow(color.rgb, vec3(1.0 / 2.2));
+    color.rgb = pow(color.rgb, vec3(1.0 / 2.2));
     fragColor = vec4(color, 1.0);
 }
