@@ -226,7 +226,7 @@ float eval(vec3 V, vec3 L, float alpha)
 }
 
 float ReflectivityAdjust(float dotNV){
-    return clamp(1, 0, (1.0-dotNV)+0.1)*2;
+    return clamp(1, 0, (1.0-dotNV)+0.2);
 }
 
 vec3 getLTCSpec()
@@ -315,8 +315,8 @@ vec3 getLTCSpec()
     //specular *= eval(V, L, material.albedoRoughness.w);
     // result = areaLight.color * areaLight.intensity * (specular + mDiffuse * diffuse);
     // result = areaLight.color * areaLight.intensity * mDiffuse * diffuse;
-    result = areaLight.color * ((1.0-material.albedoRoughness.w)*specular+material.albedoRoughness.w*diffuse);
-    //result = areaLight.color * specular;
+     //result = areaLight.color * ( (1.0-material.albedoRoughness.w) * specular + diffuse * 0.3);
+    result = areaLight.color * specular;
     return result/3.141592653/2;
 }
 
@@ -339,7 +339,7 @@ vec3 mix(vec3 a, vec3 b, float t) {
 }
 
 float getRadiance_World(vec3 dir){
-    return 50;
+    //return 50;
     const float M_PI = 3.14159265359;
     vec3 v = normalize(dir);
     float C = atan(-v.y, -v.z) + M_PI, gamma = M_PI - acos(v.x);
@@ -426,14 +426,14 @@ ClosestPoint clampPointToPolygon(vec3 polygonVertices[MAX_VERTEXCOUNT_PLUS_ONE],
 
 // Main shading procedure
 void main() {
-    if(wp.x>0){
-        fragColor = vec4(0,0,0,1.0);
-        return ;
-    }
-        
-    fragColor = vec4(getRadiance_World(vec3(0))*getLTCSpec().rgb,1.0);
-    //fragColor = vec4(pow(getRadiance_World(vec3(0))*getLTCSpec().rgb, vec3(1.0 / 2.2)), 1.0);;
-    return ;
+//    if(wp.x>0){
+//        fragColor = vec4(0,0,0,1.0);
+//        return ;
+//    }
+//        
+//    fragColor = vec4(getRadiance_World(vec3(0))*getLTCSpec().rgb,1.0);
+//    //fragColor = vec4(pow(getRadiance_World(vec3(0))*getLTCSpec().rgb, vec3(1.0 / 2.2)), 1.0);;
+//    return ;
 
     vec3 P = wp;
     vec3 n = normalize(n);
@@ -570,6 +570,7 @@ void main() {
         }
     }
     color.rgb *= IntensityMulti;
-    color.rgb = pow(color.rgb, vec3(1.0 / 2.2));
+    color.rgb /= 2;
+    color.rgb = pow(color.rgb, vec3(1.0 / 1.6));
     fragColor = vec4(color, 1.0);
 }
