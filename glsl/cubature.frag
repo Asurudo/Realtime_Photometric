@@ -226,7 +226,7 @@ float eval(vec3 V, vec3 L, float alpha)
 }
 
 float ReflectivityAdjust(float dotNV){
-    return clamp(1, 0, (1.0-dotNV)+0.2);
+    return clamp((1.0-dotNV)+0.3,  0, 1);
 }
 
 vec3 getLTCSpec()
@@ -245,7 +245,7 @@ vec3 getLTCSpec()
     //float dotNL = clamp(dot(N, L), 0.0f, 1.0f);
 
     // use roughness and sqrt(1-cos_theta) to sample M_texture
-     vec2 uv = vec2(material.albedoRoughness.w, 1.0-acos(dotNV)/3.141592653);
+     vec2 uv = vec2(material.albedoRoughness.w, clamp(acos(dotNV)/3.141592653*2, 0, 1));
     //return vec3(uv, 1.0);
 
     //vec2 uv = vec2(material.albedoRoughness.w, sqrt(1.0f-dotNV));
@@ -266,9 +266,9 @@ vec3 getLTCSpec()
 //    );
 
     mat3 Minv = mat3(
-        vec3( a, 0, b),
+        vec3( a, 0, c),
         vec3( 0, 1, 0),
-        vec3( c, 0, d)
+        vec3( b, 0, d)
     );
 
 //    mat3 Minv = mat3(
@@ -315,8 +315,10 @@ vec3 getLTCSpec()
     //specular *= eval(V, L, material.albedoRoughness.w);
     // result = areaLight.color * areaLight.intensity * (specular + mDiffuse * diffuse);
     // result = areaLight.color * areaLight.intensity * mDiffuse * diffuse;
-     //result = areaLight.color * ( (1.0-material.albedoRoughness.w) * specular + diffuse * 0.3);
-    result = areaLight.color * specular;
+    //specular *= (1.0-ReflectivityAdjust(dotNV))*10;
+    //result = areaLight.color * ( (1.6-material.albedoRoughness.w)/10 * specular + diffuse*(0.5+material.albedoRoughness.w)/2);
+
+    result = areaLight.color *  (1.8-material.albedoRoughness.w)/10 * specular;
     return result/3.141592653/2;
 }
 
@@ -559,18 +561,17 @@ void main() {
         if (Ld > 0.0) {
             vec3 brdf = c.xyz / 3.14159265359;
             // the diffuse
-             color += Ld / PolygonArea * brdf * material.albedoRoughness.w * ReflectivityAdjust(dot(N ,V));
+             color += Ld / PolygonArea * brdf * ReflectivityAdjust(dot(N ,V));
 
             if(denom > 0){
                 float Le = Ld / denom;
                 // the specular
-                
-                color += Le * getLTCSpec() * (1.0-material.albedoRoughness.w) * ReflectivityAdjust(dot(N ,V));
+                color += Le * getLTCSpec() * ReflectivityAdjust(dot(N ,V));
             }
         }
     }
     color.rgb *= IntensityMulti;
-    color.rgb /= 2;
+    color.rgb /= 3;
     color.rgb = pow(color.rgb, vec3(1.0 / 1.6));
     fragColor = vec4(color, 1.0);
 }
