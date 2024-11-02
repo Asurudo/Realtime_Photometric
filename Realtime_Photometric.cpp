@@ -48,13 +48,13 @@ static float roughness = 0.25;
 glm::vec3 areaLightTranslate;
 Shader* ltcShaderPtr;
 
-// 控制
+// 控制 
 bool keys[1024]; // activated keys
 
 // 摄像机
-// Camera camera(glm::vec3(-28.8, 7.4f, 12.0), glm::vec3(0.0f, 1.0f, 0.0f), -39.3f, -22.6f);
-Camera camera(glm::vec3(-25, 2.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f);
-//Camera camera(glm::vec3(1, 60.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, -90.1f);
+//Camera camera(glm::vec3(-28.8, 7.4f, 12.0), glm::vec3(0.0f, 1.0f, 0.0f), -39.3f, -22.6f);
+//Camera camera(glm::vec3(-25, 2.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f);
+Camera camera(glm::vec3(1, 60.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, -90.1f);
 float lastX = (float)SCR_WIDTH / 2.0f;
 float lastY = (float)SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -467,7 +467,7 @@ int main()
 		do_movement(deltaTime);
 
         
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		ImGui_ImplOpenGL3_NewFrame();
