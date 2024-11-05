@@ -93,7 +93,7 @@ vec3 LTC_Evaluate(vec3 N, vec3 V, vec3 P, mat3 Minv, vec3 points[4], bool twoSid
 //    // construct orthonormal basis around N
     vec3 T1, T2;
     T1 = normalize(V - N * dot(V, N));
-    T2 = cross(N, T1);
+    T2 = cross(T1, N);
 
     // rotate area light in (T1, T2, N) basis
     Minv = Minv * transpose(mat3(T1, T2, N));
@@ -233,7 +233,7 @@ vec3 getLTCSpec()
 {
     // gamma correction
     // vec3 mDiffuse = vec3(0.7f, 0.8f, 0.96f);// * texture(material.diffuse, texcoord).xyz;
-    // vec3 ks = vec3((1-material.albedoRoughness.w)/4, (1-material.albedoRoughness.w)/4, (1-material.albedoRoughness.w)/4); 
+     
 
     vec3 result = vec3(0.0f);
 
@@ -241,6 +241,7 @@ vec3 getLTCSpec()
     vec3 V = normalize(viewPosition-worldPosition);
     //vec3 L = normalize(vec3(0, 3.5, 0) - worldPosition);
     vec3 P = worldPosition;
+
     float dotNV = clamp(dot(N, V), 0.0f, 1.0f);
     //float dotNL = clamp(dot(N, L), 0.0f, 1.0f);
 
@@ -317,9 +318,10 @@ vec3 getLTCSpec()
     // result = areaLight.color * areaLight.intensity * (specular + mDiffuse * diffuse);
     // result = areaLight.color * areaLight.intensity * mDiffuse * diffuse;
     //specular *= (1.0-ReflectivityAdjust(dotNV))*10;
-    result = areaLight.color * ( (1.6-material.albedoRoughness.w)/10 * specular + diffuse*(0.5+material.albedoRoughness.w)/2);
+    vec3 ks = vec3((1-material.albedoRoughness.w)/8, (1-material.albedoRoughness.w)/8, (1-material.albedoRoughness.w)/8); 
+    result = areaLight.color * (ks*specular + diffuse*(1-ks)/2);
+    //result = areaLight.color * (ks*specular);
 
-    //result = areaLight.color *  (1.8-material.albedoRoughness.w)/10 * specular;
     return result/3.141592653/2;
 }
 
@@ -435,7 +437,7 @@ void main() {
     }
         
     fragColor = vec4(getRadiance_World(vec3(0))*getLTCSpec().rgb,1.0);
-    //fragColor = vec4(pow(getRadiance_World(vec3(0))*getLTCSpec().rgb, vec3(1.0 / 2.2)), 1.0);;
+    //fragColor = vec4(pow(getRadiance_World(vec3(0))*getLTCSpec().rgb, vec3(1.0 / 2.2)), 1.0);
     return ;
 
     vec3 P = wp;
@@ -562,7 +564,8 @@ void main() {
         if (Ld > 0.0) {
             vec3 brdf = c.xyz / 3.14159265359;
             // the diffuse
-             color += Ld / PolygonArea * brdf * ReflectivityAdjust(dot(N ,V));
+            vec3 ks = vec3((1-material.albedoRoughness.w)/8, (1-material.albedoRoughness.w)/8, (1-material.albedoRoughness.w)/8); 
+             color += Ld / PolygonArea * (1-ks) * brdf * ReflectivityAdjust(dot(N ,V));
 
             if(denom > 0){
                 float Le = Ld / denom;
@@ -573,6 +576,6 @@ void main() {
     }
     color.rgb *= IntensityMulti;
     color.rgb /= 3;
-    color.rgb = pow(color.rgb, vec3(1.0 / 1.6));
+    color.rgb = pow(color.rgb, vec3(1.0 / 1.8));
     fragColor = vec4(color, 1.0);
 }

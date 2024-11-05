@@ -40,9 +40,9 @@ const unsigned int SCR_HEIGHT = 600;
 const glm::vec3 LIGHT_COLOR = Color::White;
 // 光源乘数
 float IntensityMulti = 1.0;
-std::string lightType = "MIREL_42925637";
+std::string lightType = "LINETIK-S_42184482";
 // 粗糙度
-static float roughness = 0.25;
+static float roughness = 0.2;
 
 // std::string lightType = "PERLUCE_42182932";
 glm::vec3 areaLightTranslate;
@@ -53,8 +53,8 @@ bool keys[1024]; // activated keys
 
 // 摄像机
 //Camera camera(glm::vec3(-28.8, 7.4f, 12.0), glm::vec3(0.0f, 1.0f, 0.0f), -39.3f, -22.6f);
-//Camera camera(glm::vec3(-25, 2.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f);
-Camera camera(glm::vec3(1, 60.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, -90.1f);
+Camera camera(glm::vec3(-25, 2.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f);
+//Camera camera(glm::vec3(0, 60.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, -90.1f);
 float lastX = (float)SCR_WIDTH / 2.0f;
 float lastY = (float)SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -96,9 +96,9 @@ VertexAL areaLightVertices[6] = {
 	{ {0.0f, 3.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }, // 0 1 5 4
 	{ {0.0f, 3.4f,  1.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f} },
 	{ {0.0f, 0.4f,  1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
-	{ {0.0f, 3.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} },
-	{ {0.0f, 0.4f,  1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
-	{ {0.0f, 0.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f} }
+    {{0.0f, 3.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+    {{0.0f, 0.4f, 1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}},
+    {{0.0f, 0.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}
 };
 
 
@@ -394,7 +394,7 @@ int main()
 	shaderPlane.setVec3("Vertices[0]", areaLightVertices[0].position);
 	shaderPlane.setVec3("Vertices[1]", areaLightVertices[1].position);
 	shaderPlane.setVec3("Vertices[2]", areaLightVertices[4].position);
-	shaderPlane.setVec3("Vertices[3]", areaLightVertices[5].position);
+    shaderPlane.setVec3("Vertices[3]", areaLightVertices[5].position);
 	std::cout << intensityDis.size() * intensityDis[0].size() << std::endl;
 	int iter = 0;
 	for(int i = 0; i < intensityDis.size(); i ++)
@@ -543,7 +543,7 @@ int main()
 		glUseProgram(0);
 
 		shaderLight.use();
-		model = glm::translate(model, areaLightTranslate);
+		//model = glm::translate(model, areaLightTranslate);
 		shaderLight.setMat4("model", model);
 		shaderLight.setMat4("view", view);
 		shaderLight.setMat4("projection", projection);
