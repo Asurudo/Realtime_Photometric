@@ -226,7 +226,7 @@ float eval(vec3 V, vec3 L, float alpha)
 }
 
 float ReflectivityAdjust(float dotNV){
-    return clamp((1.0-dotNV)+0.3,  0, 1);
+    return clamp((1.0-dotNV)+0.3,  0, 1)/2.4;
 }
 
 vec3 getLTCSpec()
@@ -437,7 +437,7 @@ void main() {
     }
         
     fragColor = vec4(getRadiance_World(vec3(0))*getLTCSpec().rgb,1.0);
-    //fragColor = vec4(pow(getRadiance_World(vec3(0))*getLTCSpec().rgb, vec3(1.0 / 2.2)), 1.0);
+    //fragColor = vec4(pow(getRadiance_World(vec3(0))*getLTCSpec().rgb, vec3(1.0 / 1.5)), 1.0);
     return ;
 
     vec3 P = wp;
@@ -575,7 +575,7 @@ void main() {
         }
     }
     color.rgb *= IntensityMulti;
-    color.rgb /= 3;
-    color.rgb = pow(color.rgb, vec3(1.0 / 1.8));
+    //color.rgb /= 2.4;
+    color.rgb = pow(color.rgb, vec3(1.0 / 1.5));
     fragColor = vec4(color, 1.0);
 }

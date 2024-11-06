@@ -40,9 +40,9 @@ const unsigned int SCR_HEIGHT = 600;
 const glm::vec3 LIGHT_COLOR = Color::White;
 // 光源乘数
 float IntensityMulti = 1.0;
-std::string lightType = "LINETIK-S_42184482";
+std::string lightType = "MIREL_42925637";
 // 粗糙度
-static float roughness = 0.2;
+static float roughness = 0.6;
 
 // std::string lightType = "PERLUCE_42182932";
 glm::vec3 areaLightTranslate;
@@ -467,7 +467,7 @@ int main()
 		do_movement(deltaTime);
 
         
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		ImGui_ImplOpenGL3_NewFrame();
