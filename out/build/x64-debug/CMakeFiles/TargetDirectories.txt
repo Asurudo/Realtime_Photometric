@@ -1,4 +1,0 @@
-C:/Paper implement/2020Photometric(ac)/Realtime-Photometric/out/build/x64-debug/CMakeFiles/imgui.dir
-C:/Paper implement/2020Photometric(ac)/Realtime-Photometric/out/build/x64-debug/CMakeFiles/Realtime_Photometric.dir
-C:/Paper implement/2020Photometric(ac)/Realtime-Photometric/out/build/x64-debug/CMakeFiles/edit_cache.dir
-C:/Paper implement/2020Photometric(ac)/Realtime-Photometric/out/build/x64-debug/CMakeFiles/rebuild_cache.dir
