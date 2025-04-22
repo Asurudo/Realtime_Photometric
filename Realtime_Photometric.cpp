@@ -40,9 +40,9 @@ const unsigned int SCR_HEIGHT = 600;
 const glm::vec3 LIGHT_COLOR = Color::White;
 // 光源乘数
 float IntensityMulti = 1.0;
-std::string lightType = "MIREL_42925637";
+std::string lightType = "INTRO_60714483";
 // 粗糙度
-static float roughness = 0.6;
+static float roughness = 0.2;
 
 // std::string lightType = "PERLUCE_42182932";
 glm::vec3 areaLightTranslate;
@@ -359,7 +359,7 @@ int main()
 	glfwMakeContextCurrent(window);
     //glEnable(GL_FRAMEBUFFER_SRGB);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	glfwSetCursorPosCallback(window, mouse_callback);
+	//glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, key_callback);
 

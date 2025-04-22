@@ -233,8 +233,6 @@ vec3 getLTCSpec()
 {
     // gamma correction
     // vec3 mDiffuse = vec3(0.7f, 0.8f, 0.96f);// * texture(material.diffuse, texcoord).xyz;
-     
-
     vec3 result = vec3(0.0f);
 
     vec3 N = normalize(worldNormal);
@@ -344,7 +342,7 @@ vec3 mix(vec3 a, vec3 b, float t) {
 }
 
 float getRadiance_World(vec3 dir){
-    return 50;
+    //return 50;
     const float M_PI = 3.14159265359;
     vec3 v = normalize(dir);
     float C = atan(-v.y, -v.z) + M_PI, gamma = M_PI - acos(v.x);
@@ -436,9 +434,9 @@ void main() {
         return ;
     }
         
-    fragColor = vec4(getRadiance_World(vec3(0))*getLTCSpec().rgb,1.0);
+    //fragColor = vec4(getRadiance_World(vec3(0))*getLTCSpec().rgb,1.0);
     //fragColor = vec4(pow(getRadiance_World(vec3(0))*getLTCSpec().rgb, vec3(1.0 / 1.5)), 1.0);
-    return ;
+    //return ;
 
     vec3 P = wp;
     vec3 n = normalize(n);
@@ -575,7 +573,8 @@ void main() {
         }
     }
     color.rgb *= IntensityMulti;
-    //color.rgb /= 2.4;
-    color.rgb = pow(color.rgb, vec3(1.0 / 1.5));
+    //color.rgb = vec3(0,0,0);
+    color.rgb /= 2.4;
+    color.rgb = pow(color.rgb, vec3(1.0 / 2.2));
     fragColor = vec4(color, 1.0);
 }

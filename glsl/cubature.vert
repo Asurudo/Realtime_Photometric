@@ -23,8 +23,6 @@ void main() {
     // n = mat3(transpose(inverse(model))) * inNormal;
     
     c = vec4(1.0, 1.0, 1.0, 1.0);
-    // if(wp.x > 0)
-       // wp.x = -(wp.x);
     
     vec4 worldpos = model * vec4(inPosition, 1.0f);
 	worldPosition = worldpos.xyz;
@@ -32,6 +30,9 @@ void main() {
 	texcoord = aTexcoord;
 
 	// gl_Position = projection * view * worldpos;
+    vec4 pos = projection * view * vec4(wp, 1.0);
+    pos.x *= -1.0;
+    gl_Position = pos;
 
-    gl_Position = projection * view * vec4(wp, 1.0);
+    //gl_Position = projection * view * vec4(wp, 1.0);
 }
