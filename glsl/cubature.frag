@@ -429,10 +429,6 @@ ClosestPoint clampPointToPolygon(vec3 polygonVertices[MAX_VERTEXCOUNT_PLUS_ONE],
 
 // Main shading procedure
 void main() {
-    if(wp.x>0){
-        fragColor = vec4(0,0,0,1.0);
-        return ;
-    }
         
     //fragColor = vec4(getRadiance_World(vec3(0))*getLTCSpec().rgb,1.0);
     //fragColor = vec4(pow(getRadiance_World(vec3(0))*getLTCSpec().rgb, vec3(1.0 / 1.5)), 1.0);
@@ -479,7 +475,7 @@ void main() {
         vec3 v1 = Vertices[vi] - wp;
         float h1 = v1.y;
         if(h1 < 0)
-            h1 = abs(hb);
+            h1 = abs(h1);
         bool h1v = h1 > eps;
         bool h1n = h1 < -eps;
 

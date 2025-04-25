@@ -39,10 +39,11 @@ const unsigned int SCR_HEIGHT = 600;
 // 光源
 const glm::vec3 LIGHT_COLOR = Color::White;
 // 光源乘数
-float IntensityMulti = 1.0;
-std::string lightType = "INTRO_60714483";
+float IntensityMulti = 0.5;
+std::string lightType = "PANOS_60813872";
+//std::string lightType = "INTRO_60714483";
 // 粗糙度
-static float roughness = 0.2;
+static float roughness = 0.05;
 
 // std::string lightType = "PERLUCE_42182932";
 glm::vec3 areaLightTranslate;
