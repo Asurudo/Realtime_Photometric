@@ -39,8 +39,8 @@ const unsigned int SCR_HEIGHT = 600;
 // 光源
 const glm::vec3 LIGHT_COLOR = Color::White;
 // 光源乘数
-float IntensityMulti = 0.976;
-std::string lightType = "PERLUCE_42182932";
+float IntensityMulti = 0.15;
+std::string lightType = "MIREL_42925637";
 //std::string lightType = "INTRO_60714483";
 // 粗糙度
 static float roughness = 1.0;
@@ -54,8 +54,8 @@ bool keys[1024]; // activated keys
 
 // 摄像机
 //Camera camera(glm::vec3(-28.8, 7.4f, 12.0), glm::vec3(0.0f, 1.0f, 0.0f), -39.3f, -22.6f);
-Camera camera(glm::vec3(-25, 2.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f);
-//Camera camera(glm::vec3(-2, 30.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, -90.1f);
+//Camera camera(glm::vec3(-25, 2.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f);
+Camera camera(glm::vec3(0, 30.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, -90.0f);
 float lastX = (float)SCR_WIDTH / 2.0f;
 float lastY = (float)SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -84,7 +84,7 @@ struct VertexAL {
 	glm::vec2 texcoord;
 };
 
-const GLfloat psize = 40.0f;
+const GLfloat psize = 60.0f;
 VertexAL planeVertices[6] = {
 	{ {-psize, 0.0f, -psize}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f} },
 	{ {-psize, 0.0f,  psize}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f} },
@@ -93,25 +93,25 @@ VertexAL planeVertices[6] = {
 	{ { psize, 0.0f,  psize}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f} },
 	{ { psize, 0.0f, -psize}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f} }
 };
-float eps_1 = 0.0018;
-float eps_2 = 0.001;
-VertexAL areaLightVertices[6] = {
-	{ {0.0f, 3.4f, -1.5f-eps_2}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }, // 0 1 5 4
-	{ {0.0f, 3.4f,  1.5f+ eps_1}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f} },
-	{ {0.0f, 0.4f,  1.5f+ eps_1}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
-    {{0.0f, 3.4f, -1.5f-eps_2}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-    {{0.0f, 0.4f, 1.5f+ eps_1}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}},
-    {{0.0f, 0.4f, -1.5f-eps_2}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}
-};
-
+//float eps_1 = 0.0018;
+//float eps_2 = 0.001;
 //VertexAL areaLightVertices[6] = {
-//	{ {0.0f, 3.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }, // 0 1 5 4
-//	{ {0.0f, 3.4f,  1.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f} },
-//	{ {0.0f, 0.4f,  1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
-//	{{0.0f, 3.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-//	{{0.0f, 0.4f, 1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}},
-//	{{0.0f, 0.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}
+//	{ {0.0f, 3.4f, -1.5f-eps_2}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }, // 0 1 5 4
+//	{ {0.0f, 3.4f,  1.5f+ eps_1}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f} },
+//	{ {0.0f, 0.4f,  1.5f+ eps_1}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
+//    {{0.0f, 3.4f, -1.5f-eps_2}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+//    {{0.0f, 0.4f, 1.5f+ eps_1}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}},
+//    {{0.0f, 0.4f, -1.5f-eps_2}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}
 //};
+
+VertexAL areaLightVertices[6] = {
+	{ {0.0f, 3.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }, // 0 1 5 4
+	{ {0.0f, 3.4f,  1.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f} },
+	{ {0.0f, 0.4f,  1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
+	{{0.0f, 3.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+	{{0.0f, 0.4f, 1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}},
+	{{0.0f, 0.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}
+};
 
 
 void configureMockupData()

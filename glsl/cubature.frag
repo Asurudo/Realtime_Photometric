@@ -576,6 +576,6 @@ void main() {
     color.rgb *= IntensityMulti;
     //color.rgb = vec3(0,0,0);
     color.rgb /= 2.4;
-    color.rgb = pow(color.rgb, vec3(1.0 / 2.2));
+    color.rgb = pow(color.rgb, vec3(1.0 / 2.4));
     fragColor = vec4(color, 1.0);
 }
