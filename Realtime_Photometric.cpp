@@ -39,11 +39,11 @@ const unsigned int SCR_HEIGHT = 600;
 // 光源
 const glm::vec3 LIGHT_COLOR = Color::White;
 // 光源乘数
-float IntensityMulti = 0.5;
-std::string lightType = "PANOS_60813872";
+float IntensityMulti = 0.976;
+std::string lightType = "PERLUCE_42182932";
 //std::string lightType = "INTRO_60714483";
 // 粗糙度
-static float roughness = 0.05;
+static float roughness = 1.0;
 
 // std::string lightType = "PERLUCE_42182932";
 glm::vec3 areaLightTranslate;
@@ -55,7 +55,7 @@ bool keys[1024]; // activated keys
 // 摄像机
 //Camera camera(glm::vec3(-28.8, 7.4f, 12.0), glm::vec3(0.0f, 1.0f, 0.0f), -39.3f, -22.6f);
 Camera camera(glm::vec3(-25, 2.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f);
-//Camera camera(glm::vec3(0, 60.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, -90.1f);
+//Camera camera(glm::vec3(-2, 30.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, -90.1f);
 float lastX = (float)SCR_WIDTH / 2.0f;
 float lastY = (float)SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -93,14 +93,25 @@ VertexAL planeVertices[6] = {
 	{ { psize, 0.0f,  psize}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f} },
 	{ { psize, 0.0f, -psize}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f} }
 };
+float eps_1 = 0.0018;
+float eps_2 = 0.001;
 VertexAL areaLightVertices[6] = {
-	{ {0.0f, 3.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }, // 0 1 5 4
-	{ {0.0f, 3.4f,  1.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f} },
-	{ {0.0f, 0.4f,  1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
-    {{0.0f, 3.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-    {{0.0f, 0.4f, 1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}},
-    {{0.0f, 0.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}
+	{ {0.0f, 3.4f, -1.5f-eps_2}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }, // 0 1 5 4
+	{ {0.0f, 3.4f,  1.5f+ eps_1}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f} },
+	{ {0.0f, 0.4f,  1.5f+ eps_1}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
+    {{0.0f, 3.4f, -1.5f-eps_2}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+    {{0.0f, 0.4f, 1.5f+ eps_1}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}},
+    {{0.0f, 0.4f, -1.5f-eps_2}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}
 };
+
+//VertexAL areaLightVertices[6] = {
+//	{ {0.0f, 3.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }, // 0 1 5 4
+//	{ {0.0f, 3.4f,  1.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f} },
+//	{ {0.0f, 0.4f,  1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f} },
+//	{{0.0f, 3.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+//	{{0.0f, 0.4f, 1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}},
+//	{{0.0f, 0.4f, -1.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}
+//};
 
 
 void configureMockupData()

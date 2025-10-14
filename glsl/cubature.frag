@@ -437,6 +437,12 @@ void main() {
     vec3 P = wp;
     vec3 n = normalize(n);
 
+    if(P.x > 0)
+    {
+        fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        return ;
+    }
+
     // Create orthonormal basis around N
     // vec3 o = normalize(viewPosition - P);
     //float dotNV = dot(n, o);
@@ -557,14 +563,13 @@ void main() {
         vec3 V = normalize(viewPosition-worldPosition);
         if (Ld > 0.0) {
             vec3 brdf = c.xyz / 3.14159265359;
-            // the diffuse
-            vec3 ks = vec3((1-material.albedoRoughness.w)/8, (1-material.albedoRoughness.w)/8, (1-material.albedoRoughness.w)/8); 
-             color += Ld / PolygonArea * (1-ks) * brdf * ReflectivityAdjust(dot(N ,V));
+            //vec3 ks = vec3((1-material.albedoRoughness.w)/8, (1-material.albedoRoughness.w)/8, (1-material.albedoRoughness.w)/8); 
+            color += Ld / PolygonArea * brdf;
 
             if(denom > 0){
                 float Le = Ld / denom;
                 // the specular
-                color += Le * getLTCSpec() * ReflectivityAdjust(dot(N ,V));
+                //color += Le * getLTCSpec() * ReflectivityAdjust(dot(N ,V));
             }
         }
     }
