@@ -39,11 +39,11 @@ const unsigned int SCR_HEIGHT = 600;
 // 光源
 const glm::vec3 LIGHT_COLOR = Color::White;
 // 光源乘数
-float IntensityMulti = 0.976;
-std::string lightType = "PERLUCE_42182932";
+float IntensityMulti = 3.0;
+std::string lightType = "ARCOS3_60712332";
 //std::string lightType = "INTRO_60714483";
 // 粗糙度
-static float roughness = 1.0;
+static float roughness = 0.6;
 
 // std::string lightType = "PERLUCE_42182932";
 glm::vec3 areaLightTranslate;
@@ -55,7 +55,7 @@ bool keys[1024]; // activated keys
 // 摄像机
 //Camera camera(glm::vec3(-28.8, 7.4f, 12.0), glm::vec3(0.0f, 1.0f, 0.0f), -39.3f, -22.6f);
 Camera camera(glm::vec3(-25, 2.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f);
-//Camera camera(glm::vec3(-2, 30.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, -90.1f);
+//Camera camera(glm::vec3(0, 30.f, 0), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, -90.f);
 float lastX = (float)SCR_WIDTH / 2.0f;
 float lastY = (float)SCR_HEIGHT / 2.0f;
 bool firstMouse = true;

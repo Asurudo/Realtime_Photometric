@@ -317,8 +317,8 @@ vec3 getLTCSpec()
     // result = areaLight.color * areaLight.intensity * mDiffuse * diffuse;
     //specular *= (1.0-ReflectivityAdjust(dotNV))*10;
     vec3 ks = vec3((1-material.albedoRoughness.w)/8, (1-material.albedoRoughness.w)/8, (1-material.albedoRoughness.w)/8); 
-    result = areaLight.color * (ks*specular + diffuse*(1-ks)/2);
-    //result = areaLight.color * (ks*specular);
+    //result = areaLight.color * (ks*specular + diffuse*(1-ks)/2);
+    result = areaLight.color * (ks*specular);
 
     return result/3.141592653/2;
 }
@@ -563,19 +563,19 @@ void main() {
         vec3 V = normalize(viewPosition-worldPosition);
         if (Ld > 0.0) {
             vec3 brdf = c.xyz / 3.14159265359;
-            //vec3 ks = vec3((1-material.albedoRoughness.w)/8, (1-material.albedoRoughness.w)/8, (1-material.albedoRoughness.w)/8); 
-            color += Ld / PolygonArea * brdf;
+            vec3 ks = vec3((1-material.albedoRoughness.w)/8, (1-material.albedoRoughness.w)/8, (1-material.albedoRoughness.w)/8); 
+             color += Ld / PolygonArea * (1-ks) * brdf * ReflectivityAdjust(dot(N ,V))*0.5;
 
             if(denom > 0){
                 float Le = Ld / denom;
                 // the specular
-                //color += Le * getLTCSpec() * ReflectivityAdjust(dot(N ,V));
+                color += Le * getLTCSpec()*0.5;
             }
         }
     }
     color.rgb *= IntensityMulti;
     //color.rgb = vec3(0,0,0);
-    color.rgb /= 2.4;
-    color.rgb = pow(color.rgb, vec3(1.0 / 2.2));
+    color.rgb /= 3;
+    color.rgb = pow(color.rgb, vec3(1.0 / 1.6));
     fragColor = vec4(color, 1.0);
 }
